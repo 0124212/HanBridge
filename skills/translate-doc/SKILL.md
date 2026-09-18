@@ -61,13 +61,14 @@ target = "ko"
 name = "google"
 ```
 
-Change `target` to `"en"` for English output. Change `name` to `"baidu"` or `"ollama"` for China/offline use.
+Change `target` to `"en"` for English output. Change `name` to `"baidu"` or `"ollama"` for China/offline use, or `"translatepy"` for a free no-key fallback.
 
 ### 3. Backend Selection Guide
 
 | Backend | VPN needed? | Cost | Quality | Best for |
 |---------|------------|------|---------|----------|
 | `google` | ⚠️ Yes (blocked in China) | Free | Good | Outside China |
+| `translatepy` | No | Free | OK | **Free fallback, no key** |
 | `baidu` | No | Free 50k chars/day | Good | **China, no VPN** |
 | `ollama` | No | Free (local) | Good-Very good | **China, fully offline** |
 | `gemini` | Yes | Free tier | Very good | Outside China |

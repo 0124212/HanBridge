@@ -144,7 +144,7 @@ Examples:
     )
     parser.add_argument("input", help="Input file (PDF, DOCX, PPTX)")
     parser.add_argument("-t", "--target", default="ko", choices=["ko", "en"], help="Target language (default: ko)")
-    parser.add_argument("-b", "--backend", default="google", choices=["google", "baidu", "ollama", "gemini", "anthropic"], help="Translation backend (default: google)")
+    parser.add_argument("-b", "--backend", default="google", choices=["google", "baidu", "ollama", "translatepy", "gemini", "anthropic"], help="Translation backend (default: google; use baidu for China, translatepy for free fallback)")
     parser.add_argument("--dual", action="store_true", help="Also generate bilingual PDF")
     parser.add_argument("-o", "--output", help="Output file path")
 
