@@ -32,7 +32,7 @@ from palimpsest.translate.cache import compute_namespace
 from palimpsest.translate.google import GoogleBackend
 from palimpsest.translate.translator import Translator
 
-_KNOWN = ("google", "anthropic", "gemini", "baidu", "ollama", "translatepy")
+_KNOWN = ("google", "anthropic", "gemini", "baidu", "ollama", "translatepy", "workbuddy")
 
 
 def _has_credentials(
@@ -83,6 +83,12 @@ def _has_credentials(
         return True  # Ollama is always available if running locally
     if name == "translatepy":
         return True  # No API key needed
+    if name == "workbuddy":
+        return allow_env_fallback and bool(
+            os.environ.get("WORKBUDDY_API_BASE")
+            and os.environ.get("WORKBUDDY_API_KEY")
+            and os.environ.get("WORKBUDDY_MODEL")
+        )
     return False
 
 
@@ -127,6 +133,36 @@ def _build_one(
         from palimpsest.translate.translatepy_backend import TranslatepyBackend
 
         return TranslatepyBackend()
+    if name == "workbuddy":
+        from palimpsest.translate.workbuddy import WorkbuddyBackend
+
+        api_base = os.environ.get("WORKBUDDY_API_BASE", "")
+        api_key = os.environ.get("WORKBUDDY_API_KEY", "")
+        model = os.environ.get("WORKBUDDY_MODEL", "")
+        if not api_base or not api_key or not model:
+            raise DependencyError(
+                "WORKBUDDY_API_BASE, WORKBUDDY_API_KEY and WORKBUDDY_MODEL required"
+            )
+        try:
+            timeout = float(os.environ.get("WORKBUDDY_TIMEOUT", "120"))
+        except ValueError:
+            timeout = 120.0
+        try:
+            temperature = float(os.environ.get("WORKBUDDY_TEMPERATURE", "0.1"))
+        except ValueError:
+            temperature = 0.1
+        try:
+            max_tokens = int(os.environ.get("WORKBUDDY_MAX_TOKENS", "2000"))
+        except ValueError:
+            max_tokens = 2000
+        return WorkbuddyBackend(
+            api_base=api_base,
+            api_key=api_key,
+            model=model,
+            timeout=timeout,
+            temperature=temperature,
+            max_tokens=max_tokens,
+        )
     raise ConfigError(f"unknown backend {name!r} (expected one of {_KNOWN})")
 
 

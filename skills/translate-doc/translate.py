@@ -3,12 +3,13 @@
 translate.py — Simple wrapper around palimpsest for Chinese → Korean/English translation.
 
 Usage:
-    python translate.py <input_file> [--target ko|en] [--backend google|baidu|ollama] [--dual]
+    python translate.py <input_file> [--target ko|en] [--backend google|baidu|ollama|translatepy|workbuddy] [--dual]
 
 Examples:
     python translate.py report.pdf                          # Chinese → Korean (default)
     python translate.py report.pdf --target en              # Chinese → English
     python translate.py report.pptx --backend baidu         # Use Baidu (China, no VPN)
+    python translate.py report.pptx --backend workbuddy     # Use Dad's WorkBuddy tokens
     python translate.py paper.docx --dual                   # Generate bilingual PDF too
 """
 
@@ -18,8 +19,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-VENV_ACTIVATE = Path(__file__).resolve().parent.parent / ".venv" / "bin" / "activate"
-PALIMPSEST_ROOT = Path(__file__).resolve().parent.parent
+VENV_ACTIVATE = Path(__file__).resolve().parent.parent.parent / ".venv" / "bin" / "activate"
+PALIMPSEST_ROOT = Path(__file__).resolve().parent.parent.parent
 
 
 def ensure_palimpsest():
@@ -144,7 +145,7 @@ Examples:
     )
     parser.add_argument("input", help="Input file (PDF, DOCX, PPTX)")
     parser.add_argument("-t", "--target", default="ko", choices=["ko", "en"], help="Target language (default: ko)")
-    parser.add_argument("-b", "--backend", default="google", choices=["google", "baidu", "ollama", "translatepy", "gemini", "anthropic"], help="Translation backend (default: google; use baidu for China, translatepy for free fallback)")
+    parser.add_argument("-b", "--backend", default="google", choices=["google", "baidu", "ollama", "translatepy", "workbuddy", "gemini", "anthropic"], help="Translation backend (default: google; use workbuddy for Dad's tokens, baidu for China)")
     parser.add_argument("--dual", action="store_true", help="Also generate bilingual PDF")
     parser.add_argument("-o", "--output", help="Output file path")
 

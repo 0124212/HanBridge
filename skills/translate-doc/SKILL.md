@@ -67,14 +67,23 @@ Change `target` to `"en"` for English output. Change `name` to `"baidu"` or `"ol
 
 | Backend | VPN needed? | Cost | Quality | Best for |
 |---------|------------|------|---------|----------|
-| `google` | ⚠️ Yes (blocked in China) | Free | Good | Outside China |
-| `translatepy` | No | Free | OK | **Free fallback, no key** |
+| `workbuddy` | No | Dad's token quota | Very good–Excellent | **Dad's WorkBuddy tokens (recommended)** |
 | `baidu` | No | Free 50k chars/day | Good | **China, no VPN** |
 | `ollama` | No | Free (local) | Good-Very good | **China, fully offline** |
+| `translatepy` | No | Free | OK | **Free fallback, no key** |
+| `google` | ⚠️ Yes (blocked in China) | Free | Good | Outside China |
 | `gemini` | Yes | Free tier | Very good | Outside China |
 | `anthropic` | Yes | Paid | Excellent | Highest quality |
 
-**For use in China:** Set `name = "baidu"` in palimpsest.toml and add env vars:
+**For Dad (WorkBuddy tokens):** Set `name = "workbuddy"` in palimpsest.toml and add env vars:
+```bash
+export WORKBUDDY_API_BASE="https://tokenhub-intl.tencentcloudmaas.com/v1"
+export WORKBUDDY_API_KEY="<key from Tencent Cloud console>"
+export WORKBUDDY_MODEL="deepseek-v4-pro"
+```
+Use the Token Plan endpoint (`.../plan/v3`) and matching model ID if Dad's quota is a Token Plan package. Keys stay in env/local settings — never commit them.
+
+**For use in China (no tokens):** Set `name = "baidu"` in palimpsest.toml and add env vars:
 ```bash
 export BAIDU_APP_ID="your_app_id"
 export BAIDU_SECRET_KEY="your_secret_key"

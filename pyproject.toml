@@ -36,12 +36,14 @@ dependencies = [
   "numpy>=1.26",
   "pillow>=10.0",
   "python-dotenv>=1.0",
+  "requests>=2.31",
 ]
 
 [project.optional-dependencies]
 anthropic = ["anthropic>=0.40"]
 gemini = ["google-genai>=1.0"]
 ocr = ["ocrmypdf>=16.0"]
+translatepy = ["translate>=3.8"]
 server = [
   "fastapi>=0.110",
   "uvicorn>=0.27",
@@ -53,7 +55,7 @@ dev = [
   "mypy>=1.10",
   "httpx>=0.27",
 ]
-all = ["palimpsest-translate[anthropic,gemini,ocr,server]"]
+all = ["palimpsest-translate[anthropic,gemini,ocr,server,translatepy]"]
 
 [project.scripts]
 palimpsest = "palimpsest.cli:main"
