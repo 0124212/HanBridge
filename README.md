@@ -1,7 +1,17 @@
 <h1 align="center">
   <a href="https://ianperaltahirujo.github.io/palimpsest/"><img src="docs/assets/logo.png" width="48" height="48" valign="middle" alt="palimpsest logo — two overlapping page outlines in register"></a>
-  palimpsest
+  palimpsest-cn
 </h1>
+
+> **Dad — start here.**
+> This fork translates **Chinese PDF / Word / PowerPoint → Korean or English**
+> with layout preserved, using your WorkBuddy tokens (no VPN needed).
+> Pick your guide:
+> - 🇬🇧 English: **[README.en.md](README.en.md)**
+> - 🇰🇷 한국어: **[README.ko.md](README.ko.md)**
+>
+> 3 steps: install → set 3 WorkBuddy values → run one command.
+> Details below are the upstream developer docs.
 
 <p align="center">
   <i>A palimpsest is a manuscript page scraped clean so the surface can be reused — the<br>
