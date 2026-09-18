@@ -32,7 +32,7 @@ from palimpsest.translate.cache import compute_namespace
 from palimpsest.translate.google import GoogleBackend
 from palimpsest.translate.translator import Translator
 
-_KNOWN = ("google", "anthropic", "gemini")
+_KNOWN = ("google", "anthropic", "gemini", "baidu", "ollama", "translatepy")
 
 
 def _has_credentials(
@@ -75,6 +75,14 @@ def _has_credentials(
         if anthropic_api_key:
             return True
         return allow_env_fallback and bool(os.environ.get("ANTHROPIC_API_KEY"))
+    if name == "baidu":
+        return allow_env_fallback and bool(
+            os.environ.get("BAIDU_APP_ID") and os.environ.get("BAIDU_SECRET_KEY")
+        )
+    if name == "ollama":
+        return True  # Ollama is always available if running locally
+    if name == "translatepy":
+        return True  # No API key needed
     return False
 
 
@@ -101,6 +109,24 @@ def _build_one(
         if gemini_api_key is None and not allow_env_fallback:
             raise DependencyError("no Gemini API key configured for this session")
         return GeminiBackend.from_config(config.backend.gemini, api_key=gemini_api_key)
+    if name == "baidu":
+        from palimpsest.translate.baidu import BaiduBackend
+
+        app_id = os.environ.get("BAIDU_APP_ID", "")
+        secret_key = os.environ.get("BAIDU_SECRET_KEY", "")
+        if not app_id or not secret_key:
+            raise DependencyError("BAIDU_APP_ID and BAIDU_SECRET_KEY required")
+        return BaiduBackend(app_id=app_id, secret_key=secret_key)
+    if name == "ollama":
+        from palimpsest.translate.ollama import OllamaBackend
+
+        model = os.environ.get("OLLAMA_MODEL", "qwen2.5")
+        host = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
+        return OllamaBackend(model=model, host=host)
+    if name == "translatepy":
+        from palimpsest.translate.translatepy_backend import TranslatepyBackend
+
+        return TranslatepyBackend()
     raise ConfigError(f"unknown backend {name!r} (expected one of {_KNOWN})")
 
 
