@@ -185,8 +185,8 @@ output_dir = "./translated"
 Then run:
 
 ```bash
-palimpsest translate "document.pdf" --backend baidu -o "translated/document.ko.pdf"
-palimpsest translate "slides.pptx" --backend baidu --dual -o "translated/slides.ko.pptx"
+palimpsest translate "document.pdf" --backend workbuddy -o "translated/document.ko.pdf"
+palimpsest translate "slides.pptx" --backend workbuddy --dual -o "translated/slides.ko.pptx"
 ```
 
 ## 9. Good to know

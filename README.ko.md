@@ -107,6 +107,18 @@ export BAIDU_SECRET_KEY="your_secret_key"
 ollama pull qwen2.5
 ```
 
+3. (선택) 모델 지정:
+
+```bash
+# macOS / Linux
+export OLLAMA_MODEL="qwen2.5"
+```
+
+```powershell
+# Windows
+setx OLLAMA_MODEL "qwen2.5"
+```
+
 ## 7. 번역하기 (가장 쉬운 방법)
 
 새 터미널마다 먼저 가상환경을 활성화하세요:
@@ -146,7 +158,33 @@ python skills/translate-doc/translate.py "document.pdf" --backend ollama
 결과물은 원본 파일 옆의 `translated/` 폴더에 저장됩니다.
 예: `translated/document.ko.pdf`
 
-## 8. 알아둘 점
+## 8. 번역하기 (직접 CLI)
+
+위 래퍼 스크립트를 권장합니다 — 설정을 자동으로 만들어주기 때문입니다.
+`palimpsest`를 직접 쓰려면 문서와 같은 폴더에 `palimpsest.toml`을 만드세요:
+
+```toml
+[language]
+source = "zh"
+target = "ko"        # 영어 출력은 "en"
+
+[backend]
+name = "workbuddy"   # 또는 "baidu", "ollama", "translatepy", "google"
+fallback = "translatepy"
+
+[paths]
+source_dir = "."
+output_dir = "./translated"
+```
+
+실행:
+
+```bash
+palimpsest translate "document.pdf" --backend workbuddy -o "translated/document.ko.pdf"
+palimpsest translate "slides.pptx" --backend workbuddy --dual -o "translated/slides.ko.pptx"
+```
+
+## 9. 알아둘 점
 
 - **레이아웃이 보존됩니다.** 글꼴, 위치, 표, 이미지가 원래 자리에 그대로 있습니다.
 - **코드·숫자·이름이 보호됩니다.** 기술 용어(예: CNN, AlphaFold, HumanEval)와 금액은 번역되지 않고 그대로 유지됩니다.
@@ -154,7 +192,7 @@ python skills/translate-doc/translate.py "document.pdf" --backend ollama
 - **스캔 PDF**는 OCR로 자동 처리됩니다.
 - **Google 번역은 중국에서 동작하지 않습니다.** `workbuddy`, `baidu`, `ollama` 중 하나를 사용하세요.
 
-## 9. 문제 해결
+## 10. 문제 해결
 
 | 문제 | 해결 방법 |
 |------|-----------|
