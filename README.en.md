@@ -80,6 +80,41 @@ export WORKBUDDY_MODEL="deepseek-v4-pro"
 
 Keep the key on Dad's machine only — never paste it into chat or commit it.
 
+### Check the endpoint first (10 seconds, costs almost nothing)
+
+Run this **before** translating real documents. It translates one word and
+proves the base URL, the key, and the model ID are all correct:
+
+**Windows (PowerShell):**
+
+```powershell
+$base = $env:WORKBUDDY_API_BASE.TrimEnd('/')
+if (-not $base.EndsWith('/chat/completions')) { $base += '/chat/completions' }
+$body = @{ model = $env:WORKBUDDY_MODEL
+  messages = @(@{ role = 'user'; content = 'Translate to Korean: 你好' })
+  max_tokens = 20; temperature = 0.1 } | ConvertTo-Json -Depth 5
+Invoke-RestMethod -Uri $base -Method Post `
+  -Headers @{ Authorization = "Bearer $($env:WORKBUDDY_API_KEY)" } `
+  -ContentType 'application/json' -Body $body
+```
+
+**macOS / Linux:**
+
+```bash
+base="${WORKBUDDY_API_BASE%/}"
+[[ "$base" == */chat/completions ]] || base="$base/chat/completions"
+curl -s "$base" -H "Authorization: Bearer $WORKBUDDY_API_KEY" \
+  -H 'Content-Type: application/json' \
+  -d "{\"model\":\"$WORKBUDDY_MODEL\",\"messages\":[{\"role\":\"user\",\"content\":\"Translate to Korean: 你好\"}],\"max_tokens\":20,\"temperature\":0.1}"
+```
+
+| Response | Meaning | Next step |
+|----------|---------|-----------|
+| `안녕하세요` in the reply | Base URL ✓ key ✓ model ✓ — go translate | Nothing, it works |
+| `401` / `403` | Key wrong, scope missing, or different auth | Check the key scope in the Tencent console |
+| `404` | Base URL or model ID wrong | Copy both character-by-character from the console |
+| Timeout / can't connect | Network from this machine | Try the other endpoint host (intl vs China) |
+
 ## 5. Baidu setup (China, no tokens)
 
 1. Go to https://fanyi-api.baidu.com/product/11 and register.
@@ -159,6 +194,14 @@ python skills/translate-doc/translate.py "paper.pdf" --backend baidu --dual
 python skills/translate-doc/translate.py "document.pdf" --backend ollama
 ```
 
+No keys at all? Drop `--backend` — the wrapper defaults to `translatepy`
+(free, no key, verified Chinese→Korean above). Lower quality than Baidu or
+WorkBuddy, but it works out of the box:
+
+```bash
+python skills/translate-doc/translate.py "document.pdf"
+```
+
 Output goes to a `translated/` folder next to your file,
 e.g. `translated/document.ko.pdf`.
 
@@ -197,7 +240,32 @@ palimpsest translate "slides.pptx" --backend workbuddy --dual -o "translated/sli
 - **Scanned PDFs** are handled with OCR automatically (needs `ocrmypdf`, included in `[all]`).
 - **Google Translate does not work in China.** Use `workbuddy`, `baidu`, `ollama`, or `translatepy`.
 
-## 10. Troubleshooting
+## 10. What stays untouched (diagrams, tables, fonts)
+
+Only the words change. Everything else survives because of how the tool works:
+
+- **Word / PowerPoint / Excel** — the file is unzipped and *only text runs*
+  are rewritten. Images, diagrams, shapes, charts, vectors, positions,
+  fonts, and styles are copied through byte-identical (compression and
+  timestamps preserved). Tables keep their grid — only the cell text is
+  translated.
+- **PDF** — text is cleared *without touching images or line art*, and the
+  translation is redrawn at the original coordinates with real embedded
+  fonts. Multi-column pages and tables keep their geometry.
+- **Numbers, names, code** stay verbatim (e.g. CNN, AlphaFold, amounts).
+- **Nothing is silently dropped.** A paragraph that fails to translate stays
+  in Chinese and is reported (`failures=0` means a clean run).
+- **Pure-Chinese paragraphs are translated**, not skipped — including titles
+  and headings with no English in them.
+
+Verified 2026-09-21: a Chinese Word file (3 paragraphs incl. pure-Chinese
+titles + a 2×2 table) → Korean, 7/7 text nodes, table intact, 0 lost — with
+both the free `translatepy` backend and Gemini.
+
+One honest limit: PDF output needs a Korean-capable font on the machine. If
+Korean renders as boxes, install one (e.g. Noto Sans CJK KR) and re-run.
+
+## 11. Troubleshooting
 
 | Problem | Fix |
 |---------|-----|

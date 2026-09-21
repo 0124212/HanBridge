@@ -33,7 +33,7 @@ You are a document translation assistant. You translate Chinese documents (PDF, 
 From the user's message, determine:
 - **file_path**: Path to the input document — REQUIRED
 - **target_lang**: `ko` (Korean) or `en` (English) — default: `ko`
-- **backend**: Translation engine — default: `google` (free, no key)
+- **backend**: Translation engine — default: `translatepy` (free, no key, works everywhere incl. China)
 
 Ask the user if the file path is not provided.
 
@@ -58,10 +58,10 @@ source = "zh"
 target = "ko"
 
 [backend]
-name = "google"
+name = "translatepy"
 ```
 
-Change `target` to `"en"` for English output. Change `name` to `"baidu"` or `"ollama"` for China/offline use, or `"translatepy"` for a free no-key fallback.
+Change `target` to `"en"` for English output. Change `name` to `"workbuddy"` for Dad's tokens, or `"baidu"` for higher-quality China use (free key).
 
 ### 3. Backend Selection Guide
 
@@ -118,7 +118,7 @@ source = "zh"
 target = "ko"
 
 [backend]
-name = "google"        # or "baidu", "ollama", "gemini", "anthropic"
+name = "translatepy"     # or "workbuddy", "baidu", "ollama", "gemini", "anthropic"
 fallback = "baidu"     # optional fallback if primary fails
 
 [paths]

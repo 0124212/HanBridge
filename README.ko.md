@@ -80,6 +80,41 @@ export WORKBUDDY_MODEL="deepseek-v4-pro"
 
 키는 본인 PC에만 보관하세요 — 채팅에 붙여넣거나 커밋하지 마세요.
 
+### 먼저 엔드포인트 확인 (10초, 비용 거의 없음)
+
+실제 문서를 번역하기 **전에** 실행하세요. 한 단어를 번역하면서
+Base URL·키·모델 ID가 모두 맞는지 증명합니다:
+
+**Windows (PowerShell):**
+
+```powershell
+$base = $env:WORKBUDDY_API_BASE.TrimEnd('/')
+if (-not $base.EndsWith('/chat/completions')) { $base += '/chat/completions' }
+$body = @{ model = $env:WORKBUDDY_MODEL
+  messages = @(@{ role = 'user'; content = 'Translate to Korean: 你好' })
+  max_tokens = 20; temperature = 0.1 } | ConvertTo-Json -Depth 5
+Invoke-RestMethod -Uri $base -Method Post `
+  -Headers @{ Authorization = "Bearer $($env:WORKBUDDY_API_KEY)" } `
+  -ContentType 'application/json' -Body $body
+```
+
+**macOS / Linux:**
+
+```bash
+base="${WORKBUDDY_API_BASE%/}"
+[[ "$base" == */chat/completions ]] || base="$base/chat/completions"
+curl -s "$base" -H "Authorization: Bearer $WORKBUDDY_API_KEY" \
+  -H 'Content-Type: application/json' \
+  -d "{\"model\":\"$WORKBUDDY_MODEL\",\"messages\":[{\"role\":\"user\",\"content\":\"Translate to Korean: 你好\"}],\"max_tokens\":20,\"temperature\":0.1}"
+```
+
+| 응답 | 의미 | 다음 단계 |
+|------|------|-----------|
+| 답에 `안녕하세요` | Base URL ✓ 키 ✓ 모델 ✓ — 번역 시작 | 없음, 동작합니다 |
+| `401` / `403` | 키 오류, 권한 범위 누락, 인증 방식 상이 | Tencent 콘솔에서 키 범위 확인 |
+| `404` | Base URL 또는 모델 ID 오류 | 콘솔에서 한 글자씩 대조 |
+| 시간 초과 / 연결 불가 | 이 PC의 네트워크 문제 | 다른 엔드포인트 호스트 시도 (intl vs 중국) |
+
 ## 5. Baidu 설정 (중국, 토큰이 없을 때)
 
 1. https://fanyi-api.baidu.com/product/11 에서 가입합니다.
@@ -155,6 +190,14 @@ python skills/translate-doc/translate.py "paper.pdf" --backend workbuddy --dual
 python skills/translate-doc/translate.py "document.pdf" --backend ollama
 ```
 
+키가 하나도 없나요? `--backend`를 빼세요 — 래퍼 기본값이 `translatepy`
+(무료, 키 불필요, 중국어→한국어 검증됨)입니다. Baidu나 WorkBuddy보다
+품질은 낮지만 바로 동작합니다:
+
+```bash
+python skills/translate-doc/translate.py "document.pdf"
+```
+
 결과물은 원본 파일 옆의 `translated/` 폴더에 저장됩니다.
 예: `translated/document.ko.pdf`
 
@@ -192,7 +235,30 @@ palimpsest translate "slides.pptx" --backend workbuddy --dual -o "translated/sli
 - **스캔 PDF**는 OCR로 자동 처리됩니다.
 - **Google 번역은 중국에서 동작하지 않습니다.** `workbuddy`, `baidu`, `ollama` 중 하나를 사용하세요.
 
-## 10. 문제 해결
+## 10. 손대지 않는 것 (그림, 표, 글꼴)
+
+단어만 바뀝니다. 나머지가 유지되는 이유:
+
+- **Word / PowerPoint / Excel** — 파일 압축을 풀고 *텍스트만* 바꿉니다.
+  이미지, 다이어그램, 도형, 차트, 벡터, 위치, 글꼴, 스타일은
+  바이트 그대로 복사됩니다(압축·타임스탬프 유지). 표는 격자 그대로,
+  셀 텍스트만 번역됩니다.
+- **PDF** — 이미지·선아트는 건드리지 않고 텍스트만 지운 뒤, 원본 좌표에
+  실제 내장 글꼴로 번역을 다시 그립니다. 다단·표 구조가 유지됩니다.
+- **숫자·이름·코드**는 그대로 유지됩니다(예: CNN, AlphaFold, 금액).
+- **조용히 버려지는 문단이 없습니다.** 번역 실패 문단은 중국어 원문이
+  남고 보고됩니다(`failures=0`이면 깨끗한 실행).
+- **순수 중국어 문단도 번역됩니다** — 영어 없는 제목·표제도 포함.
+
+2026-09-21 검증: 중국어 Word 파일(순수 중국어 포함 3문단 + 2×2 표) →
+한국어, 7/7 텍스트 노드, 표 구조 유지, 손실 0 — 무료 `translatepy`와
+Gemini 모두에서 확인.
+
+정직한 한계 하나: PDF 출력에는 한국어 지원 글꼴이 PC에 필요합니다.
+한국어가 네모(□)로 나오면 글꼴을 설치하고(예: Noto Sans CJK KR)
+다시 실행하세요.
+
+## 11. 문제 해결
 
 | 문제 | 해결 방법 |
 |------|-----------|

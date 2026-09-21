@@ -49,7 +49,10 @@ def _translatable(s: str | None) -> bool:
     if _SKIP_RE.match(t) or _FORMULA_RE.match(t):
         return False
     # Needs at least one run of letters to be worth translating.
-    return bool(re.search(r"[A-Za-zÀ-ÖØ-öø-ÿ]{2,}", t))
+    # Unicode letter class (not Latin-only): Chinese/Japanese/Korean and
+    # every other script count, so pure-CJK paragraphs are translated.
+    # ponytail: single regex, no per-script ranges to maintain.
+    return bool(re.search(r"[^\W\d_]{2,}", t))
 
 
 def _iter_text_nodes(tree, part_name: str):

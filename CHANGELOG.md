@@ -5,6 +5,25 @@ All notable changes to this project are documented here. Format follows
 does not yet promise strict [Semantic Versioning](https://semver.org/)
 compatibility guarantees (pre-1.0).
 
+## [Unreleased] — palimpsest-cn fork
+
+### Fixed
+
+- Pure-Chinese paragraphs (no Latin letters at all — e.g. titles like
+  实验报告总结) were silently left untranslated in PDF (`pdf/layout.py`)
+  and Office files (`office/ooxml.py::_translatable`), because the
+  "worth translating" filter only recognized Latin letters. Both filters
+  now accept any Unicode letters; digits/punctuation-only lines are still
+  skipped. Verified: Chinese DOCX → Korean, 7/7 text nodes, table intact,
+  0 lost, with both `translatepy` and Gemini backends.
+
+### Changed
+
+- `skills/translate-doc/translate.py` wrapper default backend is now
+  `translatepy` (free, no key, works in China) instead of `google`
+  (blocked in China); generated configs now include a `translatepy`
+  fallback.
+
 ## [0.2.2] — 2026-08-09
 
 ### Fixed

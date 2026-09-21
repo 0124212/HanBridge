@@ -126,6 +126,10 @@ output_dir = "./translated"
 
 ## What's new in this fork
 
+- **CJK paragraph fix (2026-09-21)** — pure-Chinese paragraphs (no Latin
+  letters at all, e.g. titles like 实验报告总结) used to be silently
+  skipped in PDF/DOCX/PPTX because the translatability filter only
+  recognized Latin letters. Both filters now accept any Unicode letters.
 - **WorkBuddy backend** — spends Dad's Tencent TokenHub/Token Plan quota, no VPN needed
 - **Baidu Translate backend** — native China, no VPN, free tier
 - **Ollama backend** — fully offline with local LLM models
@@ -138,6 +142,11 @@ output_dir = "./translated"
 3-page Chinese coding research paper (60+ paragraphs, code blocks, tables, mixed Chinese/English content):
 - Korean: 57/57 paragraphs translated, layout preserved
 - English: 57/57 paragraphs translated, layout preserved
+
+Chinese DOCX → Korean (2026-09-21, after the CJK fix):
+- 3 paragraphs incl. pure-Chinese titles + one 2×2 table → 7/7 text nodes,
+  table intact, 0 lost — verified with both `translatepy` (free, no key)
+  and Gemini backends.
 
 ## License
 

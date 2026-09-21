@@ -479,7 +479,10 @@ def extract_paragraphs(
             text = re.sub(r"\s+", " ", text).strip()
             if not text:
                 continue
-            if not re.search(r"[A-Za-zÀ-ÖØ-öø-ÿ]", text):
+            # Unicode letter class (not Latin-only): pure-CJK paragraphs
+            # are translatable too. Digits/punctuation-only lines are still
+            # skipped by NUM_ONLY_RE below.
+            if not re.search(r"[^\W\d_]", text):
                 continue
             if NUM_ONLY_RE.match(text):
                 continue

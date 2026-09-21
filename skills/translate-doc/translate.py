@@ -67,6 +67,7 @@ target = "{target_lang}"
 
 [backend]
 name = "{backend}"
+fallback = "translatepy"
 
 [paths]
 source_dir = "."
@@ -77,7 +78,7 @@ output_dir = "./translated"
 def translate(
     input_file: str,
     target_lang: str = "ko",
-    backend: str = "google",
+    backend: str = "translatepy",
     dual: bool = False,
     output: str | None = None,
 ):
@@ -145,7 +146,7 @@ Examples:
     )
     parser.add_argument("input", help="Input file (PDF, DOCX, PPTX)")
     parser.add_argument("-t", "--target", default="ko", choices=["ko", "en"], help="Target language (default: ko)")
-    parser.add_argument("-b", "--backend", default="google", choices=["google", "baidu", "ollama", "translatepy", "workbuddy", "gemini", "anthropic"], help="Translation backend (default: google; use workbuddy for Dad's tokens, baidu for China)")
+    parser.add_argument("-b", "--backend", default="translatepy", choices=["google", "baidu", "ollama", "translatepy", "workbuddy", "gemini", "anthropic"], help="Translation backend (default: translatepy — free, no key, works everywhere; use workbuddy for Dad's tokens, baidu for China)")
     parser.add_argument("--dual", action="store_true", help="Also generate bilingual PDF")
     parser.add_argument("-o", "--output", help="Output file path")
 
