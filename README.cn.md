@@ -57,12 +57,33 @@ python translate.py paper.docx --dual                      # Bilingual output
 
 | Backend | VPN needed? | Cost | Best for |
 |---------|------------|------|----------|
-| `google` | ⚠️ Yes (blocked in China) | Free | Outside China |
-| `translatepy` | No | Free | Free fallback (lower quality) |
+| `workbuddy` | No | Dad's WorkBuddy token quota | **Recommended — Dad's tokens** |
 | `baidu` | No | Free 50k chars/day | **China, no VPN** |
 | `ollama` | No | Free (local) | **China, fully offline** |
+| `translatepy` | No | Free | Free fallback (lower quality) |
+| `google` | ⚠️ Yes (blocked in China) | Free | Outside China |
 | `gemini` | Yes | Free tier | Outside China |
 | `anthropic` | Yes | Paid | Highest quality |
+
+### WorkBuddy setup (recommended — uses Dad's tokens)
+
+Dad's WorkBuddy quota is Tencent Cloud TokenHub/Token Plan credit,
+spent through an OpenAI-compatible endpoint. Three values from the
+Tencent Cloud console:
+
+1. **API Base** — TokenHub: `https://tokenhub-intl.tencentcloudmaas.com/v1`
+   or Token Plan: `https://tokenhub-intl.tencentcloudmaas.com/plan/v3`
+   (China/Guangzhou Token Plan: `https://tokenhub.tencentcloudmaas.com/plan/v3`)
+2. **API Key** — created under API Key Management, with scope covering your model.
+3. **Model** — the exact model ID, e.g. `deepseek-v4-pro`.
+
+```bash
+export WORKBUDDY_API_BASE="https://tokenhub-intl.tencentcloudmaas.com/v1"
+export WORKBUDDY_API_KEY="paste-key-here"
+export WORKBUDDY_MODEL="deepseek-v4-pro"
+```
+
+Keep the key on Dad's machine only — never paste it into chat or commit it.
 
 ### Baidu setup (recommended for China)
 
@@ -95,7 +116,7 @@ source = "zh"
 target = "ko"        # or "en" for English
 
 [backend]
-name = "baidu"       # or "ollama", "translatepy", "google"
+name = "workbuddy"   # or "baidu", "ollama", "translatepy", "google"
 fallback = "translatepy"
 
 [paths]
@@ -105,6 +126,7 @@ output_dir = "./translated"
 
 ## What's new in this fork
 
+- **WorkBuddy backend** — spends Dad's Tencent TokenHub/Token Plan quota, no VPN needed
 - **Baidu Translate backend** — native China, no VPN, free tier
 - **Ollama backend** — fully offline with local LLM models
 - **translatepy backend** — free fallback via MyMemory/LibreTranslate

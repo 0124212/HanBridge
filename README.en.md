@@ -9,7 +9,7 @@ Only the words change language.
 - Windows 10/11, macOS, or Linux
 - Python 3.11 or newer
 - Your document file (`.pdf`, `.docx`, `.pptx`, `.xlsx`)
-- For use in China (no VPN): a free Baidu Translate key **or** Ollama for fully offline use
+- For use in China (no VPN): Dad's WorkBuddy tokens (recommended) **or** a free Baidu Translate key **or** Ollama for fully offline use
 
 ## 2. Install
 
@@ -80,7 +80,7 @@ export WORKBUDDY_MODEL="deepseek-v4-pro"
 
 Keep the key on Dad's machine only — never paste it into chat or commit it.
 
-## 4. Baidu setup (recommended in China)
+## 5. Baidu setup (China, no tokens)
 
 1. Go to https://fanyi-api.baidu.com/product/11 and register.
 2. Create an app and copy your **APP_ID** and **SECRET_KEY**.
@@ -102,7 +102,7 @@ export BAIDU_APP_ID="your_app_id"
 export BAIDU_SECRET_KEY="your_secret_key"
 ```
 
-## 5. Ollama setup (fully offline alternative)
+## 6. Ollama setup (fully offline alternative)
 
 1. Install Ollama from https://ollama.ai
 2. Pull a model:
@@ -123,7 +123,7 @@ export OLLAMA_MODEL="qwen2.5"
 setx OLLAMA_MODEL "qwen2.5"
 ```
 
-## 6. Translate (easiest way — wrapper script)
+## 7. Translate (easiest way — wrapper script)
 
 Activate the environment first (every new terminal):
 
@@ -162,7 +162,7 @@ python skills/translate-doc/translate.py "document.pdf" --backend ollama
 Output goes to a `translated/` folder next to your file,
 e.g. `translated/document.ko.pdf`.
 
-## 7. Translate (direct CLI)
+## 8. Translate (direct CLI)
 
 The wrapper above is recommended because it writes the config for you.
 If you use `palimpsest` directly, create a `palimpsest.toml`
@@ -174,7 +174,7 @@ source = "zh"
 target = "ko"        # or "en" for English
 
 [backend]
-name = "baidu"       # or "ollama", "translatepy", "google"
+name = "workbuddy"   # or "baidu", "ollama", "translatepy", "google"
 fallback = "translatepy"
 
 [paths]
@@ -189,20 +189,21 @@ palimpsest translate "document.pdf" --backend baidu -o "translated/document.ko.p
 palimpsest translate "slides.pptx" --backend baidu --dual -o "translated/slides.ko.pptx"
 ```
 
-## 8. Good to know
+## 9. Good to know
 
 - **Layout is preserved.** Fonts, positions, tables, and images stay where they were.
 - **Code, numbers, and names are protected.** Technical terms (e.g. CNN, AlphaFold, HumanEval) and amounts stay verbatim.
 - **Failed paragraphs stay in Chinese** instead of disappearing — nothing is silently dropped.
 - **Scanned PDFs** are handled with OCR automatically (needs `ocrmypdf`, included in `[all]`).
-- **Google Translate does not work in China.** Use `baidu`, `ollama`, or `translatepy`.
+- **Google Translate does not work in China.** Use `workbuddy`, `baidu`, `ollama`, or `translatepy`.
 
-## 9. Troubleshooting
+## 10. Troubleshooting
 
 | Problem | Fix |
 |---------|-----|
-| `BAIDU_APP_ID and BAIDU_SECRET_KEY required` | Set the env vars (step 4) and reopen the terminal |
-| `unknown backend` | Use one of: `google baidu ollama translatepy gemini anthropic` |
+| `BAIDU_APP_ID and BAIDU_SECRET_KEY required` | Set the env vars (step 5) and reopen the terminal |
+| `WORKBUDDY_API_BASE ... required` | Set the env vars (step 4) and reopen the terminal |
+| `unknown backend` | Use one of: `workbuddy baidu ollama translatepy google gemini anthropic` |
 | `File not found` | Put the full path in quotes, e.g. `"C:\Users\name\file.pdf"` |
 | Google errors / rate limits | Switch to `--backend baidu` or `--backend translatepy` |
 | Python too old | Install Python 3.11+ from https://www.python.org/downloads/ |

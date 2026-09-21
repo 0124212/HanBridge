@@ -53,6 +53,16 @@ masquerade as a successful one.
 [Why this exists](#why-this-exists-not-just-what-it-does) · [Architecture](#architecture) ·
 [Contributing](#contributing) · [License](#license)
 
+**Where to look (this fork):**
+
+| I want to… | Open this |
+|---|---|
+| Translate a file, step by step (English) | [README.en.md](README.en.md) |
+| 단계별 사용법 (한국어) | [README.ko.md](README.ko.md) |
+| One-command wrapper | [`skills/translate-doc/translate.py`](skills/translate-doc/translate.py) |
+| Copy-paste Chinese→Korean / →English configs | [`examples/palimpsest.zh-ko.toml`](examples/palimpsest.zh-ko.toml) · [`examples/palimpsest.zh-en.toml`](examples/palimpsest.zh-en.toml) |
+| Fill in keys (copy to `.env`, never commit) | [`.env.example`](.env.example) |
+
 ## Install
 
 ```bash

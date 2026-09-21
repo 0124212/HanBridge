@@ -1,0 +1,23 @@
+# Dad preset: Chinese → Korean (copy to your document folder as `palimpsest.toml`).
+# Then run: palimpsest translate "document.pdf"
+# (or the wrapper: python skills/translate-doc/translate.py "document.pdf" --backend workbuddy)
+#
+# Keys come from the environment / .env — never put them in this file.
+
+schema = 1
+
+[language]
+source = "zh"
+target = "ko"
+
+[paths]
+source_dir = "."
+output_dir = "./translated"
+
+[backend]
+name = "workbuddy"        # Dad's Tencent TokenHub/Token Plan quota, no VPN
+fallback = "translatepy"  # free no-key fallback if the primary refuses
+
+[backend.google]
+batch_size = 20
+pause_seconds = 0.35
