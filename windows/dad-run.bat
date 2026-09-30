@@ -34,6 +34,17 @@ if not exist "%INPUT%" (
 
 if not exist "translated" mkdir "translated" >nul 2>&1
 
+echo %DATE% %TIME% 开始 START "%INPUT%" >> "translated\翻译日志.txt" 2>nul || ver>nul
+for %%S in ("%INPUT%") do if %%~zS GTR 20971520 echo 文件大，可能要十几分钟，请勿关闭 / Large file, be patient
+if not "%INPUT:&=X%"=="%INPUT%" goto :namewarn
+if not "%INPUT:#=X%"=="%INPUT%" goto :namewarn
+if not "%INPUT:!=X%"=="%INPUT%" goto :namewarn
+echo "%INPUT%" | findstr "%%" >nul 2>&1 && goto :namewarn
+goto :nameskip
+:namewarn
+echo 文件名有特殊符号，建议先重命名再试 (仍继续尝试) / Special chars in filename, still trying...
+:nameskip
+
 echo 正在翻译...请稍候 / Translating, please wait:
 echo %INPUT%
 echo ..........
@@ -70,6 +81,7 @@ if errorlevel 1 (
 
 :keeporiginal
 call :keepcopy "%INPUT%"
+echo %DATE% %TIME% 失败 FAILED code=1 "%INPUT%" >> "translated\翻译日志.txt" 2>nul || ver>nul
 echo 网络连不上翻译服务，已保留原文，请稍后再试。
 pause
 exit /b 1
@@ -77,6 +89,7 @@ exit /b 1
 :success
 echo.
 echo [完成 DONE] 翻译完成，结果在 translated 文件夹 / Done, see translated folder.
+echo %DATE% %TIME% 成功 SUCCESS code=0 "%INPUT%" >> "translated\翻译日志.txt" 2>nul || ver>nul
 start "" explorer "translated"
 pause
 exit /b 0

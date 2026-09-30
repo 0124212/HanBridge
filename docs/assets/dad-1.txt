@@ -1,0 +1,2 @@
+Screenshot placeholder for docs/assets/dad-1.png (setup double-click).
+To be added on Windows: double-click windows\setup-dad.bat, screenshot the Done screen, save as dad-1.png next to this file.

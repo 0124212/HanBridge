@@ -14,19 +14,39 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent  # repo root
 TRANSLATE_PY = ROOT / "skills" / "translate-doc" / "translate.py"
 OUT_DIR = ROOT / "translated"
+LOG_FILE = OUT_DIR / "翻译日志.txt"
+
+
+def append_log(msg: str):
+    try:
+        OUT_DIR.mkdir(exist_ok=True)
+        with open(LOG_FILE, "a", encoding="utf-8") as f:
+            f.write(msg + "\n")
+    except OSError:
+        pass  # log must never break flow
 
 
 def run_translate(path: str, status: tk.Label, open_btn: tk.Button, root: tk.Tk):
-    status.config(text="翻译中... / Translating...", fg="black")
+    try:
+        big = Path(path).stat().st_size > 20 * 1024 * 1024
+    except OSError:
+        big = False
+    if big:
+        status.config(text="文件大请稍候... / Big file, please wait...", fg="black")
+    else:
+        status.config(text="翻译中... / Translating...", fg="black")
     open_btn.pack_forget()
     root.update()
+    append_log("正在翻译... / Translating: " + path)
     cmd = [sys.executable, str(TRANSLATE_PY), path, "--target", "ko", "--dual"]
     try:
         subprocess.run(cmd, cwd=str(ROOT), check=True)
     except subprocess.CalledProcessError:
         status.config(text="失败 / Failed，请重试。", fg="red")
+        append_log("[失败 FAILED] " + path)
         return
     status.config(text="完成 / Done!", fg="green")
+    append_log("[完成 DONE] " + path)
     open_btn.pack(pady=6)
 
 
