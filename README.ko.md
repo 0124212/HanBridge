@@ -4,11 +4,19 @@
 **원본 레이아웃이 그대로 유지**됩니다 — 글꼴, 위치, 표, 이미지는 그대로 두고
 단어만 번역합니다.
 
-## 아빠 3단계 / 3 steps (Windows)
+## 아빠 3단계 / 3 steps (Windows 11)
 
 1. zip 다운로드 후 압축 풀기 (Code → Download ZIP)
-2. `windows\setup-dad.bat` 더블클릭 — 환경 자동 설치 + 바탕화면에"翻译爸爸" 생성
-3. 파일을 "翻译爸爸"에 드래그 → `translated` 폴더에서 번역문 확인
+2. `windows\setup-dad.bat` 더블클릭 — 환경 자동 설치 + 바탕화면에 "翻译爸爸" 생성
+3. 중국어 PDF / PPT를 바탕화면 "翻译爸爸"에 드래그 → `translated` 폴더에서 번역문 확인
+
+> GPU 안내 (선택 OPTIONAL): RTX 3080 Ti는 VRAM 12GB라 Ollama 로컬 모델로 빠르고 비공개적인 오프라인 번역이 가능합니다. 안 해도 됩니다.
+>
+> ```bat
+> ollama pull qwen2.5:7b
+> setx OLLAMA_MODEL "qwen2.5:7b"
+> REM 번역할 때 --backend ollama 를 붙이면 오프라인 번역
+> ```
 
 ## 1. 준비물
 

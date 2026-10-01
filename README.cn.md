@@ -4,11 +4,19 @@ Layout-preserving document translation for Chinese → Korean / English.
 
 Fork of [ianperaltahirujo/palimpsest](https://github.com/ianperaltahirujo/palimpsest) with added backends for China use (no VPN required).
 
-## 爸爸 3 步 / Dad's 3 steps (Windows)
+## 爸爸 3 步 / Dad's 3 steps (Windows 11)
 
 1. 下载 zip 并解压 / Download zip and unzip (Code → Download ZIP)
 2. 双击 `windows\setup-dad.bat` — 自动装好环境 + 桌面出现"翻译爸爸"
-3. 把文件拖到"翻译爸爸"上 → `translated` 文件夹拿译文
+3. 把中文 PDF / PPT 拖到桌面"翻译爸爸"上 → `translated` 文件夹拿译文
+
+> 显卡说明（可选 OPTIONAL）: 你的 RTX 3080 Ti 有 12GB 显存，可本地跑 Ollama 模型离线隐私翻译，不联网也行。不装也能用，跳过没关系。
+>
+> ```bat
+> ollama pull qwen2.5:7b
+> setx OLLAMA_MODEL "qwen2.5:7b"
+> REM 翻译时加 --backend ollama 即可离线翻译
+> ```
 
 ## What it does
 

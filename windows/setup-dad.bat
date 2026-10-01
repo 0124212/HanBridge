@@ -7,6 +7,7 @@ chcp 65001 >nul
 cd /d "%~dp0.."
 echo ============================================
 echo  爸爸翻译安装 / Dad's Translator Setup
+echo  共 6 步，全自动，每步都会告诉你进度 / 6 steps, automatic, progress shown each step.
 echo ============================================
 echo.
 
