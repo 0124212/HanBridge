@@ -1,11 +1,13 @@
 @echo off
-REM setup-dad.bat -- One-click setup for Dad's translator (palimpsest-cn, Option A)
-REM 双击运行 / Double-click to run. All messages bilingual CN/EN.
+REM setup-dad.bat -- *** THE ONLY SETUP / 唯一入口 *** -- One-click setup for Dad's translator
+REM 先运行我 / RUN ME FIRST. 其他 bat 都是可选 / all other bats are optional extras.
+REM 双击运行 / Double-click to run. Creates .venv, installs, makes desktop 翻译爸爸 shortcut.
 
 chcp 65001 >nul
 cd /d "%~dp0.."
 echo ============================================
 echo  爸爸翻译安装 / Dad's Translator Setup
+echo  共 6 步，全自动，每步都会告诉你进度 / 6 steps, automatic, progress shown each step.
 echo ============================================
 echo.
 

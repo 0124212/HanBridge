@@ -6,11 +6,18 @@
 > **Dad — start here.**
 > This fork translates **Chinese PDF / Word / PowerPoint → Korean or English**
 > with layout preserved, using your WorkBuddy tokens (no VPN needed).
-> Pick your guide:
-> - 🇬🇧 English: **[README.en.md](README.en.md)**
-> - 🇰🇷 한국어: **[README.ko.md](README.ko.md)**
+> 3 steps (Windows 11):
+> 1. Download zip and unzip (Code → Download ZIP)
+> 2. Double-click `windows\setup-dad.bat` — auto-installs, puts 翻译爸爸 on the desktop
+> 3. Drag a Chinese PDF / PPT onto desktop 翻译爸爸 → translation appears in `translated`
+> Full guides: 🇬🇧 English: **[README.en.md](README.en.md)** · 🇰🇷 한국어: **[README.ko.md](README.ko.md)** · 🇨🇳 中文: **[README.cn.md](README.cn.md)**
 >
-> 3 steps: install → set 3 WorkBuddy values → run one command.
+> GPU note (OPTIONAL): RTX 3080 Ti has 12GB VRAM — fast local offline translation via Ollama. Skip if not needed.
+> ```bat
+> ollama pull qwen2.5:7b
+> setx OLLAMA_MODEL "qwen2.5:7b"
+> REM then translate with --backend ollama for offline private translation
+> ```
 > Details below are the upstream developer docs.
 
 <p align="center">
