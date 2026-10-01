@@ -4,6 +4,12 @@
 **원본 레이아웃이 그대로 유지**됩니다 — 글꼴, 위치, 표, 이미지는 그대로 두고
 단어만 번역합니다.
 
+## 아빠 3단계 / 3 steps (Windows)
+
+1. zip 다운로드 후 압축 풀기 (Code → Download ZIP)
+2. `windows\setup-dad.bat` 더블클릭 — 환경 자동 설치 + 바탕화면에"翻译爸爸" 생성
+3. 파일을 "翻译爸爸"에 드래그 → `translated` 폴더에서 번역문 확인
+
 ## 1. 준비물
 
 - Windows 10/11, macOS 또는 Linux

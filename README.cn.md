@@ -4,6 +4,12 @@ Layout-preserving document translation for Chinese → Korean / English.
 
 Fork of [ianperaltahirujo/palimpsest](https://github.com/ianperaltahirujo/palimpsest) with added backends for China use (no VPN required).
 
+## 爸爸 3 步 / Dad's 3 steps (Windows)
+
+1. 下载 zip 并解压 / Download zip and unzip (Code → Download ZIP)
+2. 双击 `windows\setup-dad.bat` — 自动装好环境 + 桌面出现"翻译爸爸"
+3. 把文件拖到"翻译爸爸"上 → `translated` 文件夹拿译文
+
 ## What it does
 
 Translates Chinese PDFs, Word docs, and PowerPoint files to Korean or English **while preserving the original layout** — same fonts, same positions, same tables, same images. Only the words change language.

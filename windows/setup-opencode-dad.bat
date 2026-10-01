@@ -1,6 +1,6 @@
 @echo off
-REM setup-opencode-dad.bat -- Dad's own-OpenCode installer (palimpsest-cn)
-REM 双击运行 / Double-click to run. All messages bilingual CN/EN.
+REM setup-opencode-dad.bat -- OPTIONAL step 2 / 可选第2步 (only if Dad wants his own OpenCode)
+REM 先运行 setup-dad.bat! / Run setup-dad.bat FIRST. All messages bilingual CN/EN.
 
 chcp 65001 >nul
 cd /d "%~dp0.."
