@@ -21,16 +21,48 @@ goto :venv
 
 :nopython
 echo [错误 ERROR] 没有找到 Python / Python not found.
-echo 请先安装 Python 3.11 或更高版本 / Please install Python 3.11 or later:
+echo 正在自动安装 Python 3.12，请稍候 / Auto-installing Python 3.12, please wait...
+echo (如弹出确认窗口请点“是” / If a prompt pops up, click Yes.)
+where winget >nul 2>&1
+if errorlevel 1 goto :manualpython
+winget install -e --id Python.Python.3.12 --accept-source-agreements --accept-package-agreements
+if errorlevel 1 goto :manualpython
+REM winget 不刷新当前窗口的 PATH，手动加上默认安装路径 / PATH is stale in this shell, add default location.
+set "PATH=%LocalAppData%\Programs\Python\Python312\;%LocalAppData%\Programs\Python\Python312\Scripts\;%PATH%"
+python --version >nul 2>&1
+if errorlevel 1 goto :manualpython
+echo [OK] Python 自动安装成功 / Python auto-installed.
+goto :venv
+
+:manualpython
+echo 请手动安装 Python 3.11 或更高版本 / Please install Python 3.11+ manually:
 echo https://www.python.org/downloads/
 echo 注意：安装时请勾选 "Add python.exe to PATH"
 echo Note: tick "Add python.exe to PATH" during install.
+echo 装完后重新双击本脚本 / Then double-click this script again.
 pause
 exit /b 1
 
 :oldpython
 echo [错误 ERROR] Python 版本太旧 / Python version too old (need ^>= 3.11).
-echo 请升级 Python / Please upgrade Python: https://www.python.org/downloads/
+echo 正在自动升级到 Python 3.12，请稍候 / Auto-upgrading to Python 3.12, please wait...
+echo (如弹出确认窗口请点“是” / If a prompt pops up, click Yes.)
+where winget >nul 2>&1
+if errorlevel 1 goto :manualoldpython
+winget install -e --id Python.Python.3.12 --accept-source-agreements --accept-package-agreements
+if errorlevel 1 goto :manualoldpython
+set "PATH=%LocalAppData%\Programs\Python\Python312\;%LocalAppData%\Programs\Python\Python312\Scripts\;%PATH%"
+python -c "import sys; sys.exit(0 if sys.version_info>=(3,11) else 1)" >nul 2>&1
+if errorlevel 1 goto :manualoldpython
+echo [OK] Python 升级成功 / Python upgraded.
+goto :venv
+
+:manualoldpython
+echo 自动升级失败，请手动升级 / Auto-upgrade failed, please upgrade manually:
+echo https://www.python.org/downloads/
+echo 注意：安装时请勾选 "Add python.exe to PATH"
+echo Note: tick "Add python.exe to PATH" during install.
+echo 装完后重新双击本脚本 / Then double-click this script again.
 pause
 exit /b 1
 

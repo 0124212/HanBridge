@@ -7,9 +7,11 @@
 > This fork translates **Chinese PDF / Word / PowerPoint → Korean or English**
 > with layout preserved, using your WorkBuddy tokens (no VPN needed).
 > 3 steps (Windows 11):
-> 1. Download zip and unzip (Code → Download ZIP)
-> 2. Double-click `windows\setup-dad.bat` — auto-installs, puts 翻译爸爸 on the desktop
+> 1. Win+X → Terminal, paste + Enter:
+> `powershell -c "irm https://raw.githubusercontent.com/0124212/palimpsest-cn/main/windows/install.ps1 | iex"`
+> 2. Wait until done (翻译爸爸 on the desktop)
 > 3. Drag a Chinese PDF / PPT onto desktop 翻译爸爸 → translation appears in `translated`
+> Manual fallback: download zip, unzip, double-click `windows\setup-dad.bat`, then step 3.
 > Full guides: 🇬🇧 English: **[README.en.md](README.en.md)** · 🇰🇷 한국어: **[README.ko.md](README.ko.md)** · 🇨🇳 中文: **[README.cn.md](README.cn.md)**
 >
 > GPU note (OPTIONAL): RTX 3080 Ti has 12GB VRAM — fast local offline translation via Ollama. Skip if not needed.
