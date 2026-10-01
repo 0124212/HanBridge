@@ -18,6 +18,17 @@ Fork of [ianperaltahirujo/palimpsest](https://github.com/ianperaltahirujo/palimp
 > REM 翻译时加 --backend ollama 即可离线翻译
 > ```
 
+> 密钥 1 分钟 / API key in 1 minute（用 WorkBuddy 翻译才需要；免费 translatepy 不用）:
+> 腾讯云控制台 → API Key 管理 拿到 3 个值，然后复制粘贴下面 3 行（把第 2 行换成你的 key）:
+>
+> ```bat
+> setx WORKBUDDY_API_BASE "https://tokenhub-intl.tencentcloudmaas.com/v1"
+> setx WORKBUDDY_API_KEY "paste-key-here"
+> setx WORKBUDDY_MODEL "deepseek-v4-pro"
+> ```
+>
+> 注意：key 只放环境变量，不要写进 palimpsest.toml。
+
 ## What it does
 
 Translates Chinese PDFs, Word docs, and PowerPoint files to Korean or English **while preserving the original layout** — same fonts, same positions, same tables, same images. Only the words change language.

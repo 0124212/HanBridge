@@ -18,6 +18,14 @@
 > setx OLLAMA_MODEL "qwen2.5:7b"
 > REM then translate with --backend ollama for offline private translation
 > ```
+> API key in 1 minute (only for WorkBuddy translation; free translatepy needs none):
+> Tencent Cloud console → API Key Management gives 3 values; copy-paste these 3 lines (replace line 2 with your key):
+> ```bat
+> setx WORKBUDDY_API_BASE "https://tokenhub-intl.tencentcloudmaas.com/v1"
+> setx WORKBUDDY_API_KEY "paste-key-here"
+> setx WORKBUDDY_MODEL "deepseek-v4-pro"
+> ```
+> Keys live in env vars only — never inside palimpsest.toml.
 > Details below are the upstream developer docs.
 
 <p align="center">

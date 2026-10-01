@@ -18,6 +18,17 @@
 > REM 번역할 때 --backend ollama 를 붙이면 오프라인 번역
 > ```
 
+> API 키 1분 (WorkBuddy 번역에만 필요; 무료 translatepy는 불필요):
+> Tencent Cloud 콘솔 → API Key 관리에서 3개 값을 확인하고, 아래 3줄을 복사·붙여넣기 (2번째 줄만 네 키로 교체):
+>
+> ```bat
+> setx WORKBUDDY_API_BASE "https://tokenhub-intl.tencentcloudmaas.com/v1"
+> setx WORKBUDDY_API_KEY "여기에-키-붙여넣기"
+> setx WORKBUDDY_MODEL "deepseek-v4-pro"
+> ```
+>
+> 주의: 키는 환경 변수에만 넣고, palimpsest.toml에는 절대 쓰지 마세요.
+
 ## 1. 준비물
 
 - Windows 10/11, macOS 또는 Linux
