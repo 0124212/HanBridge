@@ -6,9 +6,12 @@ Fork of [ianperaltahirujo/palimpsest](https://github.com/ianperaltahirujo/palimp
 
 ## 爸爸 3 步 / Dad's 3 steps (Windows 11)
 
-1. 下载 zip 并解压 / Download zip and unzip (Code → Download ZIP)
-2. 双击 `windows\setup-dad.bat` — 自动装好环境 + 桌面出现"翻译爸爸"
+1. 按 Win+X 打开终端，粘贴下面一行回车 / Open Terminal (Win+X), paste + Enter:
+   `powershell -c "irm https://raw.githubusercontent.com/0124212/palimpsest-cn/main/windows/install.ps1 | iex"`
+2. 等它装完（桌面出现"翻译爸爸"）/ Wait until done (翻译爸爸 on desktop)
 3. 把中文 PDF / PPT 拖到桌面"翻译爸爸"上 → `translated` 文件夹拿译文
+
+手动备选 / Manual fallback: 下载 zip 解压 → 双击 `windows\setup-dad.bat` → 同第 3 步。
 
 > 显卡说明（可选 OPTIONAL）: 你的 RTX 3080 Ti 有 12GB 显存，可本地跑 Ollama 模型离线隐私翻译，不联网也行。不装也能用，跳过没关系。
 >

@@ -6,9 +6,12 @@
 
 ## 아빠 3단계 / 3 steps (Windows 11)
 
-1. zip 다운로드 후 압축 풀기 (Code → Download ZIP)
-2. `windows\setup-dad.bat` 더블클릭 — 환경 자동 설치 + 바탕화면에 "翻译爸爸" 생성
+1. Win+X로 터미널 열고 아래 한 줄 붙여넣기 + Enter:
+   `powershell -c "irm https://raw.githubusercontent.com/0124212/palimpsest-cn/main/windows/install.ps1 | iex"`
+2. 설치가 끝날 때까지 대기 (바탕화면에 "翻译爸爸" 생성)
 3. 중국어 PDF / PPT를 바탕화면 "翻译爸爸"에 드래그 → `translated` 폴더에서 번역문 확인
+
+수동 방법 / Manual fallback: zip 다운로드·압축 풀기 → `windows\setup-dad.bat` 더블클릭 → 위 3단계로.
 
 > GPU 안내 (선택 OPTIONAL): RTX 3080 Ti는 VRAM 12GB라 Ollama 로컬 모델로 빠르고 비공개적인 오프라인 번역이 가능합니다. 안 해도 됩니다.
 >
