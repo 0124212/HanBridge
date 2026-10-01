@@ -151,3 +151,17 @@ Chinese DOCX → Korean (2026-09-21, after the CJK fix):
 ## License
 
 Apache-2.0 (same as upstream palimpsest)
+
+## 爸爸三步用 / Dad 3 steps
+
+1. 双击安装 / Setup: 双击 `windows\setup-dad.bat` 安装一次。
+
+   ![setup double-click](docs/assets/dad-1.png)
+
+2. 拖文件翻译 / Translate: 把文件拖到桌面“翻译爸爸”上（或双击“翻译爸爸窗口版”选文件）。
+
+   ![drag file](docs/assets/dad-2.png)
+
+3. 打开看结果 / Open result: 翻译完自动打开 `translated` 文件夹，日志在 `translated/翻译日志.txt`。
+
+   ![open translated](docs/assets/dad-3.png)

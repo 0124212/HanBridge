@@ -12,6 +12,12 @@ from collections.abc import Sequence
 
 from palimpsest.translate.backend import Cost, TranslationContext, TranslationResult
 
+OFFLINE_MSG = "网络连不上翻译服务，请稍后再试"
+
+
+class OfflineError(RuntimeError):
+    """Network unreachable — message already in friendly Chinese."""
+
 
 class TranslatepyBackend:
     name = "translatepy"
@@ -26,7 +32,11 @@ class TranslatepyBackend:
     def _do_translate(self, text: str, source: str, target: str) -> str | None:
         from translate import Translator
         t = Translator(from_lang=source, to_lang=target)
-        result = t.translate(text)
+        try:
+            result = t.translate(text)
+        except (TimeoutError, ConnectionError, OSError) as e:
+            # OSError covers requests' ConnectionError/Timeout (via RequestException).
+            raise OfflineError(f"{OFFLINE_MSG}（{e}）") from e
         return result if result else None
 
     def translate(self, text: str, ctx: TranslationContext) -> TranslationResult:
@@ -37,6 +47,10 @@ class TranslatepyBackend:
                 if result:
                     return TranslationResult(text=result, status="ok")
                 last = "empty response"
+            except OfflineError as e:
+                last = str(e)
+                if attempt >= 1:
+                    break  # single retry only for network errors
             except Exception as e:
                 last = str(e)
             time.sleep(self.retry_pause * (attempt + 1))

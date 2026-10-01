@@ -21,3 +21,7 @@ fallback = "translatepy"  # free no-key fallback if the primary refuses
 [backend.google]
 batch_size = 20
 pause_seconds = 0.35
+
+# Dual (bilingual 双语对照 PDF): no config field — the palimpsest CLI and the
+# wrapper default to dual ON. Opt out per-run with:
+#   python skills/translate-doc/translate.py "document.pdf" --no-dual

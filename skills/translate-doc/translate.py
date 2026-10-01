@@ -3,14 +3,15 @@
 translate.py — Simple wrapper around palimpsest for Chinese → Korean/English translation.
 
 Usage:
-    python translate.py <input_file> [--target ko|en] [--backend google|baidu|ollama|translatepy|workbuddy] [--dual]
+    python translate.py <input_file> [--target ko|en] [--backend google|baidu|ollama|translatepy|workbuddy] [--no-dual]
 
 Examples:
     python translate.py report.pdf                          # Chinese → Korean (default)
     python translate.py report.pdf --target en              # Chinese → English
+    python translate.py report.pdf --no-dual                # Skip bilingual 对照 PDF
     python translate.py report.pptx --backend baidu         # Use Baidu (China, no VPN)
     python translate.py report.pptx --backend workbuddy     # Use Dad's WorkBuddy tokens
-    python translate.py paper.docx --dual                   # Generate bilingual PDF too
+    python translate.py paper.docx --no-dual                # Korean only, no bilingual PDF
 """
 
 import argparse
@@ -19,7 +20,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-VENV_ACTIVATE = Path(__file__).resolve().parent.parent.parent / ".venv" / "bin" / "activate"
+_VENV_BIN = "Scripts" if sys.platform == "win32" else "bin"
+VENV_ACTIVATE = Path(__file__).resolve().parent.parent.parent / ".venv" / _VENV_BIN / "activate"
 PALIMPSEST_ROOT = Path(__file__).resolve().parent.parent.parent
 
 
@@ -75,11 +77,28 @@ output_dir = "./translated"
 """)
 
 
+def count_pages(input_path: Path) -> int | None:
+    """Best-effort PDF page count for progress display. None = unknown (office files etc.)."""
+    if input_path.suffix.lower() != ".pdf":
+        return None
+    try:
+        import fitz  # PyMuPDF, already a palimpsest dependency
+        with fitz.open(str(input_path)) as doc:
+            return len(doc)
+    except Exception:
+        pass
+    try:
+        from pypdf import PdfReader
+        return len(PdfReader(str(input_path)).pages)
+    except Exception:
+        return None
+
+
 def translate(
     input_file: str,
     target_lang: str = "ko",
     backend: str = "translatepy",
-    dual: bool = False,
+    dual: bool = True,
     output: str | None = None,
 ):
     """Run palimpsest translate."""
@@ -92,13 +111,13 @@ def translate(
     ensure_palimpsest()
     write_config(target_lang, backend, work_dir)
 
-    # Output path
+    # Output path (dad-friendly: report-韩文版.pdf)
     if output:
         out_path = Path(output).resolve()
     else:
         translated_dir = work_dir / "translated"
         translated_dir.mkdir(exist_ok=True)
-        suffix = f".{target_lang}"
+        suffix = "-韩文版" if target_lang == "ko" else "-英文版"
         out_path = translated_dir / f"{input_path.stem}{suffix}{input_path.suffix}"
 
     # Build command
@@ -112,21 +131,27 @@ def translate(
     if dual:
         cmd.append("--dual")
 
-    print(f"Translating: {input_path.name}")
+    print(f"Translating: {input_path.name} 正在翻译")
     print(f"  Target:  {target_lang}")
     print(f"  Backend: {backend}")
     print(f"  Output:  {out_path}")
+    print(f"  Dual对照:  {'yes 是' if dual else 'no 否'}")
+    pages = count_pages(input_path)
+    if pages:
+        print(f"正在翻译第 1 / 共 {pages} 页，请稍候... (Translating pages 1/{pages}, please wait...)")
+    else:
+        print("正在翻译，请稍候... (Translating, please wait...)")
     print()
 
     result = subprocess.run(cmd, cwd=str(work_dir))
 
     if result.returncode == 0:
-        print(f"\n✓ Translation complete: {out_path}")
+        print(f"\n✓ Translation complete 翻译完成: {out_path}")
         if dual:
             dual_path = out_path.with_stem(out_path.stem + ".dual")
-            print(f"✓ Bilingual PDF: {dual_path}")
+            print(f"✓ Bilingual PDF 双语对照: {dual_path}")
     else:
-        print(f"\n✗ Translation failed (exit code {result.returncode})")
+        print(f"\n✗ Translation failed 翻译失败 (exit code {result.returncode})")
 
     return result.returncode
 
@@ -137,17 +162,18 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  %(prog)s report.pdf                          # Chinese → Korean
+  %(prog)s report.pdf                          # Chinese → Korean + bilingual 对照 PDF
   %(prog)s report.pdf --target en              # Chinese → English
+  %(prog)s report.pdf --no-dual                # Korean only, skip bilingual PDF
   %(prog)s report.pptx --backend baidu         # China, no VPN
-  %(prog)s paper.docx --dual                   # Bilingual output
+  %(prog)s paper.docx --no-dual                # No bilingual output
   %(prog)s slides.pptx -o /tmp/slides_ko.pptx # Custom output path
         """,
     )
     parser.add_argument("input", help="Input file (PDF, DOCX, PPTX)")
     parser.add_argument("-t", "--target", default="ko", choices=["ko", "en"], help="Target language (default: ko)")
     parser.add_argument("-b", "--backend", default="translatepy", choices=["google", "baidu", "ollama", "translatepy", "workbuddy", "gemini", "anthropic"], help="Translation backend (default: translatepy — free, no key, works everywhere; use workbuddy for Dad's tokens, baidu for China)")
-    parser.add_argument("--dual", action="store_true", help="Also generate bilingual PDF")
+    parser.add_argument("--dual", dest="dual", action=argparse.BooleanOptionalAction, default=True, help="Also generate bilingual 对照 PDF (default: yes; --no-dual to skip)")
     parser.add_argument("-o", "--output", help="Output file path")
 
     args = parser.parse_args()
