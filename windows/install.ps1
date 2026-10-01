@@ -1,6 +1,7 @@
 # install.ps1 -- One-liner installer for Dad's translator (palimpsest-cn)
 # 一键安装 / Run this ONE line in PowerShell (Win+X -> Terminal):
 #   powershell -c "irm https://raw.githubusercontent.com/0124212/palimpsest-cn/main/windows/install.ps1 | iex"
+# NOTE 若提示禁止运行脚本 / if scripts are blocked: relaunch PowerShell with -ExecutionPolicy Bypass -Scope Process (current window only, no system change).
 # What it does: download cn/main zip -> %USERPROFILE%\palimpsest-cn -> run setup-dad.bat.
 $ErrorActionPreference = 'Stop'
 $dest = Join-Path $HOME 'palimpsest-cn'

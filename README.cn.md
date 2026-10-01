@@ -13,7 +13,7 @@ Fork of [ianperaltahirujo/palimpsest](https://github.com/ianperaltahirujo/palimp
 
 手动备选 / Manual fallback: 下载 zip 解压 → 双击 `windows\setup-dad.bat` → 同第 3 步。
 
-> 显卡说明（可选 OPTIONAL）: 你的 RTX 3080 Ti 有 12GB 显存，可本地跑 Ollama 模型离线隐私翻译，不联网也行。不装也能用，跳过没关系。
+> 显卡说明（可选 OPTIONAL）: 安装时自动检测 N 卡（nvidia-smi），任何 12GB+ 显存的 N 卡（如本机 RTX 3060 12GB）都可本地跑 Ollama 7b 模型离线隐私翻译，不联网也行。不装也能用，跳过没关系。
 >
 > ```bat
 > ollama pull qwen2.5:7b

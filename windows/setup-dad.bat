@@ -11,12 +11,26 @@ echo  共 6 步，全自动，每步都会告诉你进度 / 6 steps, automatic, 
 echo ============================================
 echo.
 
-REM 1. Check python >= 3.11
-python --version >nul 2>&1
-if errorlevel 1 goto :nopython
-python -c "import sys; sys.exit(0 if sys.version_info>=(3,11) else 1)" >nul 2>&1
+REM 1. Check python >= 3.11 (field: plain `python` may be broken uv-trampoline; fall back to py -3.12)
+set "PYTHON=python"
+%PYTHON% --version >nul 2>&1
+if errorlevel 1 (
+  py -3.12 --version >nul 2>&1
+  if errorlevel 1 goto :nopython
+  set "PYTHON=py -3.12"
+  echo [OK] plain python broken, using py -3.12 / plain python 不可用，改用 py -3.12
+)
+%PYTHON% -c "import sys; sys.exit(0 if sys.version_info>=(3,11) else 1)" >nul 2>&1
 if errorlevel 1 goto :oldpython
-echo [OK] Python 版本正常 / Python version OK
+echo [OK] Python 版本正常 / Python version OK (%PYTHON%)
+
+REM 1b. GPU auto-detect (any 12GB+ NVIDIA card runs local 7b models; skip silently if none)
+where nvidia-smi >nul 2>&1
+if not errorlevel 1 (
+  echo [GPU] 检测到 NVIDIA 显卡 / NVIDIA GPU detected:
+  nvidia-smi -L
+  echo 提示 Note: 任何 12GB+ N 卡都可本地跑 7b 模型 (如本机 RTX 3060 12GB) / Any 12GB+ NVIDIA card works for local 7b models (e.g. this PC's RTX 3060 12GB).
+)
 goto :venv
 
 :nopython
@@ -70,7 +84,7 @@ exit /b 1
 REM 2. Create .venv if absent
 if not exist ".venv" (
   echo 正在创建虚拟环境 / Creating virtual environment...
-  python -m venv .venv
+  %PYTHON% -m venv .venv
 ) else (
   echo [OK] 虚拟环境已存在 / Virtual env already exists.
 )

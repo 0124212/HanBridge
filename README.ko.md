@@ -13,7 +13,7 @@
 
 수동 방법 / Manual fallback: zip 다운로드·압축 풀기 → `windows\setup-dad.bat` 더블클릭 → 위 3단계로.
 
-> GPU 안내 (선택 OPTIONAL): RTX 3080 Ti는 VRAM 12GB라 Ollama 로컬 모델로 빠르고 비공개적인 오프라인 번역이 가능합니다. 안 해도 됩니다.
+> GPU 안내 (선택 OPTIONAL): 설치 시 nvidia-smi로 자동 감지 — VRAM 12GB+ NVIDIA 카드(이 PC의 RTX 3060 12GB 등)면 Ollama 7b 로컬 모델로 빠르고 비공개적인 오프라인 번역이 가능합니다. 안 해도 됩니다.
 >
 > ```bat
 > ollama pull qwen2.5:7b
