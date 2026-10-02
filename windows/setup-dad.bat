@@ -7,11 +7,30 @@ REM Mini-TUI: boxed header, [n/6] steps, colors, menus. Plain batch only, no new
 chcp 65001 >nul
 cd /d "%~dp0.."
 
+REM --- Flags: --lang ko|en --backend free|ollama|workbuddy --yes --interactive.
+REM Bare double-click (no flags) = zero prompts: everything auto-decided.
+set "FLAG_LANG="
+set "FLAG_BACKEND="
+set "FLAG_YES="
+set "FLAG_INTERACTIVE="
+:parseargs
+if "%~1"=="" goto :argsdone
+if /i "%~1"=="--lang" (set "FLAG_LANG=%~2" & shift & shift & goto :parseargs)
+if /i "%~1"=="--backend" (set "FLAG_BACKEND=%~2" & shift & shift & goto :parseargs)
+if /i "%~1"=="--yes" (set "FLAG_YES=1" & shift & goto :parseargs)
+if /i "%~1"=="-y" (set "FLAG_YES=1" & shift & goto :parseargs)
+if /i "%~1"=="--interactive" (set "FLAG_INTERACTIVE=1" & shift & goto :parseargs)
+shift
+goto :parseargs
+:argsdone
+
 REM --- Mini-TUI colors: green OK / yellow working / red error, ANSI with fallback.
 REM Off when NO_COLOR is set or Windows major version is below 10 (no ANSI support).
 set "LANG="
 set "BACKEND="
 set "HASGPU="
+set "OSLOCALE="
+set "GPUCARD="
 set "USECOLOR=1"
 if defined NO_COLOR set "USECOLOR="
 set "WINMAJOR=10"
@@ -40,15 +59,29 @@ goto :longpath
 REM Boxed title header (ASCII box: renders on every Windows console).
 echo %C_BLD%+--------------------------------------------------+%C_RST%
 echo %C_BLD%^|%C_RST%  Dad's Translator Setup / 아빠 번역기 설치
-echo %C_BLD%^|%C_RST%  6 steps automatic + language and backend picks up front.
-echo %C_BLD%^|%C_RST%  6단계 전자동 + 먼저 언어와 번역 방식 선택.
+echo %C_BLD%^|%C_RST%  6 steps, zero prompts. Add --interactive for menus.
+echo %C_BLD%^|%C_RST%  6단계, 질문 없음. 메뉴는 --interactive.
 echo %C_BLD%+--------------------------------------------------+%C_RST%
 echo.
 
-REM 0b. Language menu (preset PALIMPSEST_LANG from install.ps1 skips the prompt).
-if defined PALIMPSEST_LANG set "LANG=%PALIMPSEST_LANG%"
-if "%LANG%"=="EN" goto :langdone
-if "%LANG%"=="KO" goto :langdone
+REM 0b. Language: --lang / PALIMPSEST_LANG wins; else OS locale auto-detect
+REM (Korean Windows -> KO first); menu ONLY with --interactive.
+if defined PALIMPSEST_LANG set "FLAG_LANG=%PALIMPSEST_LANG%"
+set "LANG="
+if /i "%FLAG_LANG%"=="ko" set "LANG=KO"
+if /i "%FLAG_LANG%"=="korean" set "LANG=KO"
+if /i "%FLAG_LANG%"=="en" set "LANG=EN"
+if /i "%FLAG_LANG%"=="english" set "LANG=EN"
+if defined LANG goto :langdone
+for /f %%L in ('powershell -NoProfile -Command "(Get-Culture).Name" 2^>nul') do set "OSLOCALE=%%L"
+set "LANG=EN"
+if /i "%OSLOCALE:~0,2%"=="ko" set "LANG=KO"
+if "%LANG%"=="KO" (
+  call :work "Korean Windows detected - 한국어 먼저" "Korean Windows detected - KO first"
+) else (
+  call :work "English first - 한국어 둘째" "English first - KO second"
+)
+if not defined FLAG_INTERACTIVE goto :langdone
 echo %C_BLD%[menu] Pick language / 언어 선택:%C_RST%
 echo   1) English (default)
 echo   2) 한국어
@@ -79,14 +112,12 @@ set "PYTHON=python"
 if errorlevel 1 goto :oldpython
 call :ok "Python version OK (%PYTHON%)" "Python 버전 정상 (%PYTHON%)"
 
-REM 1b. GPU auto-detect (any 12GB+ NVIDIA card runs local 7b models; skip silently if none)
+REM 1b. GPU silent detect: one info line, no menu (any 12GB+ card runs local 7b models).
 where nvidia-smi >nul 2>&1
-if not errorlevel 1 (
-  set "HASGPU=1"
-  call :work "NVIDIA GPU detected:" "NVIDIA 그래픽카드 감지:"
-  nvidia-smi -L
-  call :work "Any 12GB+ NVIDIA card runs local 7b models via Ollama" "12GB+ N 카드면 Ollama 로컬 7b 모델 가능"
-)
+if errorlevel 1 goto :backendmenu
+set "HASGPU=1"
+for /f "delims=" %%G in ('nvidia-smi -L 2^>nul') do if not defined GPUCARD set "GPUCARD=%%G"
+call :work "GPU: %GPUCARD%" "GPU: %GPUCARD%"
 goto :backendmenu
 
 :nopython
@@ -164,11 +195,19 @@ pause
 exit /b 1
 
 :backendmenu
-REM Backend menu (preset PALIMPSEST_BACKEND from install.ps1 skips the prompt).
-if defined PALIMPSEST_BACKEND set "BACKEND=%PALIMPSEST_BACKEND%"
-if "%BACKEND%"=="1" goto :backenddone
-if "%BACKEND%"=="2" goto :backendcheck
-if "%BACKEND%"=="3" goto :backenddone
+REM Backend: --backend / PALIMPSEST_BACKEND wins; else free translatepy silently,
+REM auto-using Ollama only if installed + a model is present. Menu ONLY with --interactive.
+if defined PALIMPSEST_BACKEND set "FLAG_BACKEND=%PALIMPSEST_BACKEND%"
+set "BACKEND="
+if /i "%FLAG_BACKEND%"=="1" set "BACKEND=1"
+if /i "%FLAG_BACKEND%"=="free" set "BACKEND=1"
+if /i "%FLAG_BACKEND%"=="translatepy" set "BACKEND=1"
+if /i "%FLAG_BACKEND%"=="2" set "BACKEND=2"
+if /i "%FLAG_BACKEND%"=="ollama" set "BACKEND=2"
+if /i "%FLAG_BACKEND%"=="3" set "BACKEND=3"
+if /i "%FLAG_BACKEND%"=="workbuddy" set "BACKEND=3"
+if defined BACKEND goto :backendflagcheck
+if not defined FLAG_INTERACTIVE goto :backendauto
 echo.
 echo %C_BLD%[menu] Pick translation backend / 번역 방식 선택:%C_RST%
 echo   1) Free - no key needed, translatepy (default) / 무료 - 키 불필요
@@ -183,6 +222,41 @@ if "%BACKENDPICK%"=="3" set "BACKEND=3"
 if "%BACKEND%"=="2" if not defined HASGPU (
   call :work "No NVIDIA GPU found - using free default instead." "NVIDIA GPU 없음 - 무료 기본값 사용."
   set "BACKEND=1"
+)
+goto :backenddone
+:backendauto
+REM Silent default: free. Switch to Ollama only if installed AND a model exists.
+set "BACKEND=1"
+where ollama >nul 2>&1
+if errorlevel 1 goto :backenddone
+ollama list 2>nul | findstr /i "qwen2.5" >nul 2>&1
+if errorlevel 1 goto :backenddone
+set "BACKEND=2"
+call :work "Ollama + model found - using local backend, no prompt." "Ollama + 모델 발견 - 로컬 백엔드 자동 사용."
+goto :backenddone
+:backendflagcheck
+REM Explicit --backend: validate it can actually work, else fall back to free.
+if "%BACKEND%"=="2" (
+  where ollama >nul 2>&1
+  if errorlevel 1 (
+    call :work "Ollama picked but not installed - using free default." "Ollama 선택됐지만 미설치 - 무료 기본값 사용."
+    set "BACKEND=1"
+    goto :backenddone
+  )
+  ollama list 2>nul | findstr /i "qwen2.5" >nul 2>&1
+  if errorlevel 1 (
+    call :work "Ollama picked but no model found - using free default." "Ollama 선택됐지만 모델 없음 - 무료 기본값 사용."
+    set "BACKEND=1"
+    goto :backenddone
+  )
+)
+if "%BACKEND%"=="3" (
+  if defined WORKBUDDY_API_KEY goto :backenddone
+  if defined FLAG_YES (
+    call :work "WorkBuddy picked but no key and --yes given - using free default." "WorkBuddy 선택됐지만 키 없고 --yes - 무료 기본값 사용."
+    set "BACKEND=1"
+    goto :backenddone
+  )
 )
 :backenddone
 set "BACKENDNAME=Free translatepy, no key"
@@ -206,6 +280,10 @@ call :ok "Ollama model set to qwen2.5:7b. Translate with --backend ollama." "Oll
 goto :venv
 
 :backendworkbuddy
+if defined WORKBUDDY_API_KEY (
+  call :ok "WorkBuddy key already set, keeping it." "WorkBuddy 키가 이미 있어 유지."
+  goto :venv
+)
 echo.
 call :work "WorkBuddy needs 3 values from Tencent Cloud console." "Tencent Cloud 콘솔에서 3개 값 확인."
 set "WB_BASE="
@@ -295,6 +373,10 @@ call :ok "Desktop windowed shortcut ready Chinese Translator App." "창 모드 �
 
 REM 6. Offer right-click menu (HKCU, no admin needed)
 call :step 6 "Right-click menu, optional" "우클릭 메뉴, 선택 사항"
+if not defined FLAG_INTERACTIVE (
+  call :work "Right-click menu skipped, default off. Rerun with --interactive to add." "우클릭 메뉴 건너뜀, 기본값 끔. 추가하려면 --interactive로 재실행."
+  goto :summary
+)
 echo.
 call :work "Add right-click menu Translate to Korean?" "우클릭 메뉴를 추가할까요?"
 set "ADDRIGHT="
@@ -305,6 +387,7 @@ if "%LANG%"=="KO" (
 )
 if /i "%ADDRIGHT%"=="Y" call "windows\add-right-click.bat"
 
+:summary
 echo.
 echo %C_BLD%+--------------------------------------------------+%C_RST%
 echo %C_BLD%^| SUMMARY / 요약%C_RST%
