@@ -7,12 +7,14 @@ echo 正在删除右键菜单 / Removing right-click entry...
 call "windows\remove-right-click.bat"
 
 echo 正在删除桌面快捷方式 / Removing desktop shortcuts...
-del "%USERPROFILE%\Desktop\Dad Translate.lnk" >nul 2>&1
-del "%USERPROFILE%\Desktop\Dad Translate Window.lnk" >nul 2>&1
-REM Legacy Chinese names from earlier installs:
+del "%USERPROFILE%\Desktop\Chinese Translator.lnk" >nul 2>&1
+del "%USERPROFILE%\Desktop\Chinese Translator App.lnk" >nul 2>&1
+REM Legacy names from earlier installs:
 del "%USERPROFILE%\Desktop\翻译爸爸.lnk" >nul 2>&1
 del "%USERPROFILE%\Desktop\翻译爸爸窗口版.lnk" >nul 2>&1
-echo [OK] Shortcuts removed (Dad Translate, Dad Translate Window). / 바로가기 제거됨.
+del "%USERPROFILE%\Desktop\Dad Translate.lnk" >nul 2>&1
+del "%USERPROFILE%\Desktop\Dad Translate Window.lnk" >nul 2>&1
+echo [OK] Shortcuts removed (Chinese Translator, Chinese Translator App). / 바로가기 제거됨.
 
 echo.
 set /p DELTRANS=是否删除 translated 文件夹? (Y/N, 默认 N) / Delete translated folder? (Y/N, default N):
