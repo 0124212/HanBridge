@@ -1,9 +1,11 @@
-"""DadTranslate.py -- 爸爸窗口版翻译器 (tkinter only, no new deps).
+"""DadTranslate.py -- Dad's windowed translator (tkinter only, no new deps).
 
-Single window: big [选择文件] button, fixed 中文->韩文 label,
-drag-drop hint, progress label, done = green 完成 + [打开文件夹] button.
+Single window: big file-picker button, Chinese->Korean label,
+drag-drop hint, progress label, done = green status + open-folder button.
 Calls skills/translate-doc/translate.py via subprocess with --target ko --dual.
+UI language: Korean (default) / English toggle button, persisted in lang.json.
 """
+import json
 import os
 import subprocess
 import sys
@@ -14,7 +16,63 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent  # repo root
 TRANSLATE_PY = ROOT / "skills" / "translate-doc" / "translate.py"
 OUT_DIR = ROOT / "translated"
-LOG_FILE = OUT_DIR / "翻译日志.txt"
+LOG_FILE = OUT_DIR / "translation-log.txt"
+LANG_FILE = Path(__file__).resolve().parent / "lang.json"
+
+STRINGS = {
+    "ko": {
+        "title": "Dad Translate (아빠 번역기)",
+        "direction": "중국어 → 한국어",
+        "pick": "파일 선택",
+        "open_folder": "폴더 열기",
+        "hint": "바탕화면 아이콘에 파일을 드래그해도 됩니다",
+        "toggle": "English",
+        "idle": "파일을 선택하세요",
+        "working": "번역 중...",
+        "working_big": "큰 파일입니다. 잠시만 기다리세요...",
+        "done": "완료!",
+        "failed": "실패, 다시 시도하세요.",
+        "dialog_title": "번역할 파일 선택",
+        "log_start": "Translating: ",
+        "log_fail": "[FAILED] ",
+        "log_done": "[DONE] ",
+    },
+    "en": {
+        "title": "Dad Translate",
+        "direction": "Chinese → Korean",
+        "pick": "Choose file",
+        "open_folder": "Open folder",
+        "hint": "You can also drag a file onto the desktop icon",
+        "toggle": "한국어",
+        "idle": "Choose a file",
+        "working": "Translating...",
+        "working_big": "Big file, please wait...",
+        "done": "Done!",
+        "failed": "Failed, please retry.",
+        "dialog_title": "Choose file to translate",
+        "log_start": "Translating: ",
+        "log_fail": "[FAILED] ",
+        "log_done": "[DONE] ",
+    },
+}
+
+STATE_FG = {"idle": "black", "working": "black", "working_big": "black",
+            "done": "green", "failed": "red"}
+
+
+def load_lang():
+    try:
+        lang = json.loads(LANG_FILE.read_text(encoding="utf-8")).get("lang", "ko")
+    except (OSError, ValueError, AttributeError):
+        lang = "ko"
+    return lang if lang in STRINGS else "ko"
+
+
+def save_lang(lang):
+    try:
+        LANG_FILE.write_text(json.dumps({"lang": lang}), encoding="utf-8")
+    except OSError:
+        pass  # persistence must never break flow
 
 
 def append_log(msg: str):
@@ -26,53 +84,73 @@ def append_log(msg: str):
         pass  # log must never break flow
 
 
-def run_translate(path: str, status: tk.Label, open_btn: tk.Button, root: tk.Tk):
-    try:
-        big = Path(path).stat().st_size > 20 * 1024 * 1024
-    except OSError:
-        big = False
-    if big:
-        status.config(text="文件大请稍候... / Big file, please wait...", fg="black")
-    else:
-        status.config(text="翻译中... / Translating...", fg="black")
-    open_btn.pack_forget()
-    root.update()
-    append_log("正在翻译... / Translating: " + path)
-    cmd = [sys.executable, str(TRANSLATE_PY), path, "--target", "ko", "--dual"]
-    try:
-        subprocess.run(cmd, cwd=str(ROOT), check=True)
-    except subprocess.CalledProcessError:
-        status.config(text="失败 / Failed，请重试。", fg="red")
-        append_log("[失败 FAILED] " + path)
-        return
-    status.config(text="完成 / Done!", fg="green")
-    append_log("[完成 DONE] " + path)
-    open_btn.pack(pady=6)
-
-
-def pick_file(status, open_btn, root):
-    path = filedialog.askopenfilename(title="选择要翻译的文件 / Choose file")
-    if path:
-        run_translate(path, status, open_btn, root)
-
-
-def open_outdir():
-    OUT_DIR.mkdir(exist_ok=True)
-    os.startfile(str(OUT_DIR))  # type: ignore[attr-defined] -- Windows only, ponytail: no cross-platform opener needed (dad is Windows-only)
-
-
 def main():
     root = tk.Tk()
-    root.title("翻译爸爸 / Dad Translate")
-    tk.Label(root, text="中文 -> 韩文", font=("", 16)).pack(pady=10)
-    status = tk.Label(root, text="请选择文件", font=("", 12))
-    open_btn = tk.Button(root, text="打开文件夹 / Open folder", command=open_outdir)
-    tk.Button(root, text="选择文件 / Choose file", font=("", 14),
-              width=20, height=2,
-              command=lambda: pick_file(status, open_btn, root)).pack(pady=10)
-    tk.Label(root, text="也可以把文件拖到桌面图标上翻译\n(Drag a file onto the desktop icon)",
-             fg="gray").pack(pady=4)
+    lang = [load_lang()]
+    state = ["idle"]
+
+    def t(key):
+        return STRINGS[lang[0]][key]
+
+    toggle_btn = tk.Button(root, font=("", 10))
+    direction_lbl = tk.Label(root, font=("", 16))
+    status = tk.Label(root, font=("", 12))
+    open_btn = tk.Button(root, command=lambda: (OUT_DIR.mkdir(exist_ok=True),
+                                                os.startfile(str(OUT_DIR))))  # type: ignore[attr-defined] -- Windows only, ponytail: no cross-platform opener needed (dad is Windows-only)
+    pick_btn = tk.Button(root, font=("", 14), width=20, height=2)
+    hint_lbl = tk.Label(root, fg="gray")
+
+    def apply():
+        root.title(t("title"))
+        toggle_btn.config(text=t("toggle"))
+        direction_lbl.config(text=t("direction"))
+        pick_btn.config(text=t("pick"))
+        open_btn.config(text=t("open_folder"))
+        hint_lbl.config(text=t("hint"))
+        status.config(text=t(state[0]), fg=STATE_FG[state[0]])
+
+    def set_state(key):
+        state[0] = key
+        status.config(text=t(key), fg=STATE_FG[key])
+        root.update()
+
+    def run_translate(path):
+        try:
+            big = Path(path).stat().st_size > 20 * 1024 * 1024
+        except OSError:
+            big = False
+        set_state("working_big" if big else "working")
+        open_btn.pack_forget()
+        append_log(t("log_start") + path)
+        cmd = [sys.executable, str(TRANSLATE_PY), path, "--target", "ko", "--dual"]
+        try:
+            subprocess.run(cmd, cwd=str(ROOT), check=True)
+        except subprocess.CalledProcessError:
+            set_state("failed")
+            append_log(t("log_fail") + path)
+            return
+        set_state("done")
+        append_log(t("log_done") + path)
+        open_btn.pack(pady=6)
+
+    def pick_file():
+        path = filedialog.askopenfilename(title=t("dialog_title"))
+        if path:
+            run_translate(path)
+
+    def toggle():
+        lang[0] = "en" if lang[0] == "ko" else "ko"
+        save_lang(lang[0])
+        apply()
+
+    toggle_btn.config(command=toggle)
+    pick_btn.config(command=pick_file)
+    toggle_btn.pack(pady=4, anchor="e", padx=8)
+    direction_lbl.pack(pady=10)
+    pick_btn.pack(pady=10)
+    hint_lbl.pack(pady=4)
     status.pack(pady=8)
+    apply()
     root.mainloop()
 
 

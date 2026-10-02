@@ -14,7 +14,7 @@
 > Manual fallback: download zip, unzip, double-click `windows\setup-dad.bat`, then step 3.
 > Full guides: 🇬🇧 English: **[README.en.md](README.en.md)** · 🇰🇷 한국어: **[README.ko.md](README.ko.md)** · 🇨🇳 中文: **[README.cn.md](README.cn.md)**
 >
-> GPU note (OPTIONAL): RTX 3080 Ti has 12GB VRAM — fast local offline translation via Ollama. Skip if not needed.
+> GPU note (OPTIONAL): setup auto-detects your NVIDIA card via nvidia-smi — any 12GB+ card (e.g. this PC's RTX 3060 12GB) runs local 7b models for fast offline translation via Ollama. Skip if not needed.
 > ```bat
 > ollama pull qwen2.5:7b
 > setx OLLAMA_MODEL "qwen2.5:7b"
