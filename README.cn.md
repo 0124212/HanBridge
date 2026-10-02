@@ -4,6 +4,8 @@ Layout-preserving document translation for Chinese → Korean / English.
 
 Fork of [ianperaltahirujo/palimpsest](https://github.com/ianperaltahirujo/palimpsest) with added backends for China use (no VPN required).
 
+> SmartScreen blocked the zip? Right-click it → Properties → check Unblock (or `Unblock-File -Recurse .` in PowerShell). No admin needed — user-local only (HKCU + %LOCALAPPDATA%, never HKLM). / SmartScreen 警告时右键 zip → 属性 → 勾选解除锁定 (或 PowerShell `Unblock-File -Recurse .`)。无需管理员 — 仅当前用户 (HKCU + %LOCALAPPDATA%, 从不写 HKLM)。
+
 ## 爸爸 3 步 / Dad's 3 steps (Windows 11)
 
 1. 按 Win+X 打开终端，粘贴下面一行回车 / Open Terminal (Win+X), paste + Enter:

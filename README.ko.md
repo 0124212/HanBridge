@@ -4,6 +4,8 @@
 **원본 레이아웃이 그대로 유지**됩니다 — 글꼴, 위치, 표, 이미지는 그대로 두고
 단어만 번역합니다.
 
+> SmartScreen blocked the zip? Right-click it → Properties → check Unblock (or `Unblock-File -Recurse .` in PowerShell). No admin needed — user-local only (HKCU + %LOCALAPPDATA%, never HKLM). / SmartScreen 경고 시 zip 우클릭 → 속성 → 차단 해제 (또는 PowerShell `Unblock-File -Recurse .`). 관리자 불필요 — 현재 사용자 영역만 사용 (HKCU + %LOCALAPPDATA%, HKLM 기록 없음).
+
 ## 아빠 3단계 / 3 steps (Windows 11)
 
 1. Win+X로 터미널 열고 아래 한 줄 붙여넣기 + Enter:

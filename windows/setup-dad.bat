@@ -5,21 +5,36 @@ REM Double-click to run / 더블클릭으로 실행. Creates .venv, installs, ma
 
 chcp 65001 >nul
 cd /d "%~dp0.."
+
+REM 0. MAX_PATH preflight: deep extract paths break pip/venv past ~100 chars.
+powershell -NoProfile -Command "if ((Get-Location).Path.Length -gt 100) { exit 1 } else { exit 0 }" >nul 2>&1
+if not errorlevel 1 goto :pathok
+goto :longpath
+
+:pathok
 echo ============================================
 echo  Dad's Translator Setup / 아빠 번역기 설치
 echo  6 steps, automatic, progress shown each step. / 6단계, 전자동, 매 단계 진행 표시.
 echo ============================================
 echo.
 
-REM 1. Check python >= 3.11 (field: plain `python` may be broken uv-trampoline; fall back to py -3.12)
-set "PYTHON=python"
-%PYTHON% --version >nul 2>&1
-if errorlevel 1 (
-  py -3.12 --version >nul 2>&1
-  if errorlevel 1 goto :nopython
-  set "PYTHON=py -3.12"
-  echo [OK] plain python broken, using py -3.12 / plain python 사용 불가, py -3.12 사용 중
+REM 1. Check python >= 3.11. Prefer py launcher first (bypasses broken
+REM    Windows Store python3.exe shim); plain `python` second (field: plain
+REM    `python` may be broken uv-trampoline or a 0KB Store alias).
+set "PYTHON="
+py -3.12 --version >nul 2>&1
+if not errorlevel 1 set "PYTHON=py -3.12"
+if defined PYTHON goto :havepy
+REM Ignore Store shim: a `python` living under WindowsApps opens the Store, it is not real Python.
+where python 2>nul | findstr /i "WindowsApps" >nul 2>&1
+if not errorlevel 1 (
+  echo [INFO] Ignoring Windows Store python shim, using py launcher. / Store 가짜 python 무시, py 런처 사용.
+  goto :nopython
 )
+python --version >nul 2>&1
+if errorlevel 1 goto :nopython
+set "PYTHON=python"
+:havepy
 %PYTHON% -c "import sys; sys.exit(0 if sys.version_info>=(3,11) else 1)" >nul 2>&1
 if errorlevel 1 goto :oldpython
 echo [OK] Python version OK / Python 버전 정상 (%PYTHON%)
@@ -37,13 +52,7 @@ goto :venv
 echo [ERROR] Python not found / Python을 찾을 수 없음.
 echo Auto-installing Python 3.12, please wait... / Python 3.12 자동 설치 중, 잠시만 기다리세요...
 echo (If a prompt pops up, click Yes. / 확인 창이 뜨면 "예"를 클릭하세요.)
-where winget >nul 2>&1
-if errorlevel 1 goto :manualpython
-winget install -e --id Python.Python.3.12 --accept-source-agreements --accept-package-agreements
-if errorlevel 1 goto :manualpython
-REM winget leaves PATH stale in this shell, prepend default install location.
-set "PATH=%LocalAppData%\Programs\Python\Python312\;%LocalAppData%\Programs\Python\Python312\Scripts\;%PATH%"
-python --version >nul 2>&1
+call :installpy312
 if errorlevel 1 goto :manualpython
 echo [OK] Python auto-installed. / Python 자동 설치 완료.
 goto :venv
@@ -60,21 +69,56 @@ exit /b 1
 echo [ERROR] Python version too old (need ^>= 3.11). / Python 버전이 너무 오래됨 (3.11+ 필요).
 echo Auto-upgrading to Python 3.12, please wait... / Python 3.12로 자동 업그레이드 중, 잠시만 기다리세요...
 echo (If a prompt pops up, click Yes. / 확인 창이 뜨면 "예"를 클릭하세요.)
-where winget >nul 2>&1
-if errorlevel 1 goto :manualoldpython
-winget install -e --id Python.Python.3.12 --accept-source-agreements --accept-package-agreements
-if errorlevel 1 goto :manualoldpython
-set "PATH=%LocalAppData%\Programs\Python\Python312\;%LocalAppData%\Programs\Python\Python312\Scripts\;%PATH%"
-python -c "import sys; sys.exit(0 if sys.version_info>=(3,11) else 1)" >nul 2>&1
+call :installpy312
 if errorlevel 1 goto :manualoldpython
 echo [OK] Python upgraded. / Python 업그레이드 완료.
 goto :venv
+
+REM Shared Python 3.12 installer: winget first (Win11/new Win10), else
+REM direct python.org download run silently, user-local (no admin).
+:installpy312
+where winget >nul 2>&1
+if errorlevel 1 goto :dlpython
+winget install -e --id Python.Python.3.12 --accept-source-agreements --accept-package-agreements
+if not errorlevel 1 goto :fixpath
+echo [INFO] winget install failed, trying direct download... / winget 실패, 직접 다운로드 시도...
+:dlpython
+echo Downloading Python 3.12 installer... / Python 3.12 설치 파일 다운로드 중...
+set "PYSETUP=%TEMP%\python-3.12.7-amd64.exe"
+powershell -NoProfile -Command "try { Invoke-WebRequest -Uri 'https://www.python.org/ftp/python/3.12.7/python-3.12.7-amd64.exe' -OutFile $env:TEMP+'\python-3.12.7-amd64.exe' } catch { exit 1 }" >nul 2>&1
+if errorlevel 1 curl.exe -L -o "%PYSETUP%" "https://www.python.org/ftp/python/3.12.7/python-3.12.7-amd64.exe" >nul 2>&1
+if not exist "%PYSETUP%" exit /b 1
+echo Running Python installer silently (current user only, no admin)... / Python 설치 중 (현재 사용자만, 관리자 불필요)...
+"%PYSETUP%" /quiet InstallAllUsers=0 PrependPath=1 Include_test=0
+if errorlevel 1 exit /b 1
+del "%PYSETUP%" >nul 2>&1
+:fixpath
+REM Installers leave PATH stale in this shell, prepend default user-local location.
+set "PATH=%LocalAppData%\Programs\Python\Python312\;%LocalAppData%\Programs\Python\Python312\Scripts\;%PATH%"
+set "PYTHON="
+py -3.12 --version >nul 2>&1
+if not errorlevel 1 set "PYTHON=py -3.12"
+if defined PYTHON goto :checkver
+python --version >nul 2>&1
+if errorlevel 1 exit /b 1
+set "PYTHON=python"
+:checkver
+%PYTHON% -c "import sys; sys.exit(0 if sys.version_info>=(3,11) else 1)" >nul 2>&1
+if errorlevel 1 exit /b 1
+exit /b 0
 
 :manualoldpython
 echo Auto-upgrade failed, please upgrade manually: / 자동 업그레이드 실패, 수동 업그레이드 필요:
 echo https://www.python.org/downloads/
 echo Note: tick "Add python.exe to PATH" during install. / 참고: 설치 시 "Add python.exe to PATH" 체크.
 echo Then double-click this script again. / 설치 후 이 스크립트를 다시 더블클릭하세요.
+pause
+exit /b 1
+
+:longpath
+echo [ERROR] Folder path too long, Windows limit 260 chars. / 폴더 경로가 너무 깁니다 (Windows 260자 제한).
+echo Please move this folder to C:\palimpsest-cn and run again. / 이 폴더를 C:\palimpsest-cn 으로 옮긴 뒤 다시 실행하세요.
+echo Current path / 현재 경로: %CD%
 pause
 exit /b 1
 

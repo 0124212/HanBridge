@@ -4,6 +4,8 @@ Translate Chinese documents (PDF / Word / PowerPoint / Excel) into **Korean or E
 with the **original layout preserved** — same fonts, positions, tables, and images.
 Only the words change language.
 
+> SmartScreen blocked the zip? Right-click it → Properties → check Unblock (or `Unblock-File -Recurse .` in PowerShell). No admin needed — user-local only (HKCU + %LOCALAPPDATA%, never HKLM). / SmartScreen 경고 시 zip 우클릭 → 속성 → 차단 해제 (또는 PowerShell `Unblock-File -Recurse .`). 관리자 불필요 — 현재 사용자 영역만 사용 (HKCU + %LOCALAPPDATA%, HKLM 기록 없음).
+
 ## 1. Requirements
 
 - Windows 10/11, macOS, or Linux
