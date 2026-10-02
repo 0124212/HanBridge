@@ -8,8 +8,8 @@ Fork of [ianperaltahirujo/palimpsest](https://github.com/ianperaltahirujo/palimp
 
 1. 按 Win+X 打开终端，粘贴下面一行回车 / Open Terminal (Win+X), paste + Enter:
    `powershell -c "irm https://raw.githubusercontent.com/0124212/palimpsest-cn/main/windows/install.ps1 | iex"`
-2. 等它装完（桌面出现"翻译爸爸"）/ Wait until done (翻译爸爸 on desktop)
-3. 把中文 PDF / PPT 拖到桌面"翻译爸爸"上 → `translated` 文件夹拿译文
+2. 等它装完（桌面出现"Dad Translate"）/ Wait until done (Dad Translate on desktop)
+3. 把中文 PDF / PPT 拖到桌面"Dad Translate"上 → `translated` 文件夹拿译文
 
 手动备选 / Manual fallback: 下载 zip 解压 → 双击 `windows\setup-dad.bat` → 同第 3 步。
 
@@ -186,7 +186,7 @@ Apache-2.0 (same as upstream palimpsest)
 
    ![setup double-click](docs/assets/dad-1.png)
 
-2. 拖文件翻译 / Translate: 把文件拖到桌面“翻译爸爸”上（或双击“翻译爸爸窗口版”选文件）。
+2. 拖文件翻译 / Translate: 把文件拖到桌面“Dad Translate”上（或双击“Dad Translate Window”选文件）。
 
    ![drag file](docs/assets/dad-2.png)
 
