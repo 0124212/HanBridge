@@ -1,33 +1,32 @@
 @echo off
-REM dad-run.bat -- Dad's one-click translate (drag-drop). 双击或拖文件到上面运行。
+REM dad-run.bat -- Dad's one-click translate (drag-drop). Drag a file onto it or double-click. / 파일을 드래그하거나 더블클릭으로 실행.
 chcp 65001 >nul
 cd /d "%~dp0.."
 
 set INPUT=%~1
 if "%INPUT%"=="" (
-  echo 把要翻译的文件拖到这个图标上 / Drag a file onto this icon,
-  echo 或者在下面输入文件路径 / or type the file path below:
-  set /p INPUT=文件路径 File path:
+  echo Drag the file to translate onto this icon, / 번역할 파일을 이 아이콘에 드래그하세요,
+  echo or type the file path below: / 또는 아래에 파일 경로를 입력하세요:
+  set /p INPUT=File path / 파일 경로:
 )
 set INPUT=%INPUT:"=%
 if "%INPUT%"=="" (
-  echo [错误 ERROR] 没有文件 / No file given.
+  echo [ERROR] No file given. / 파일이 없습니다.
   pause
   exit /b 1
 )
 
 if not exist ".venv\Scripts\python.exe" (
-  echo [错误 ERROR] 翻译环境还没装好。
-  echo 请先运行setup-dad: 双击 windows\setup-dad.bat 先安装。
-  echo Please run setup-dad first: double-click windows\setup-dad.bat.
+  echo [ERROR] Translator env not installed yet. / 번역 환경이 아직 설치되지 않았습니다.
+  echo Please run setup-dad first: double-click windows\setup-dad.bat. / 먼저 setup-dad를 실행하세요: windows\setup-dad.bat 더블클릭.
   pause
   exit /b 1
 )
 
 if not exist "%INPUT%" (
-  echo [错误 ERROR] 文件找不到 / File not found:
+  echo [ERROR] File not found: / 파일을 찾을 수 없음:
   echo %INPUT%
-  echo 请检查文件路径是否正确。
+  echo Please check the file path. / 파일 경로가 맞는지 확인하세요.
   pause
   exit /b 1
 )
@@ -35,60 +34,58 @@ if not exist "%INPUT%" (
 if not exist "translated" mkdir "translated" >nul 2>&1
 
 echo %DATE% %TIME% 开始 START "%INPUT%" >> "translated\翻译日志.txt" 2>nul || ver>nul
-for %%S in ("%INPUT%") do if %%~zS GTR 20971520 echo 文件大，可能要十几分钟，请勿关闭 / Large file, be patient
+for %%S in ("%INPUT%") do if %%~zS GTR 20971520 echo Large file, may take 10+ minutes, please do not close. / 파일이 커서 10분 이상 걸릴 수 있습니다. 닫지 마세요.
 if not "%INPUT:&=X%"=="%INPUT%" goto :namewarn
 if not "%INPUT:#=X%"=="%INPUT%" goto :namewarn
 if not "%INPUT:!=X%"=="%INPUT%" goto :namewarn
 echo "%INPUT%" | findstr "%%" >nul 2>&1 && goto :namewarn
 goto :nameskip
 :namewarn
-echo 文件名有特殊符号，建议先重命名再试 (仍继续尝试) / Special chars in filename, still trying...
+echo Special chars in filename, still trying (rename recommended)... / 파일명에 특수문자가 있지만 계속 시도합니다 (이름 변경 권장)...
 :nameskip
 
-echo 正在翻译...请稍候 / Translating, please wait:
+echo Translating, please wait: / 번역 중, 잠시만 기다리세요:
 echo %INPUT%
 echo ..........
 .venv\Scripts\python skills/translate-doc/translate.py "%INPUT%" --target ko
 if not errorlevel 1 goto :success
 
 echo.
-echo 第一次没成功，5秒后自动再试一次 / First try failed, retrying once in 5s...
+echo First try failed, retrying once in 5s... / 첫 시도 실패, 5초 후 한 번 더 시도합니다...
 timeout /t 5 /nobreak >nul 2>&1
-echo 正在翻译...请稍候 / Retrying, please wait:
+echo Retrying, please wait: / 재시도 중, 잠시만 기다리세요:
 echo ..........
 .venv\Scripts\python skills/translate-doc/translate.py "%INPUT%" --target ko
 if not errorlevel 1 goto :success
 
 echo.
-echo [失败 FAILED] 两次都失败了 / Still failed.
+echo [FAILED] Still failed after 2 tries. / [실패] 두 번 다 실패했습니다.
 for %%F in ("%INPUT%") do if exist "%%~dpF~$*" (
-  echo 文件可能被WPS占用，请关闭WPS后重试。
-  echo File may be locked by WPS, please close WPS and retry.
+  echo File may be locked by WPS, please close WPS and retry. / 파일이 WPS에 열려 있을 수 있습니다. WPS를 닫고 재시도하세요.
   goto :keeporiginal
 )
 ping -n 1 -w 2000 114.114.114.114 >nul 2>&1
 if errorlevel 1 (
-  echo [错误 ERROR] 没网 - 请检查网络，联网后按任意键重试。
-  echo No network - check connection, then press any key to retry.
+  echo [ERROR] No network - check connection, then press any key to retry. / [오류] 네트워크 없음 - 연결 확인 후 아무 키나 눌러 재시도하세요.
   pause
-  echo 正在翻译...请稍候 / Retrying, please wait:
+  echo Retrying, please wait: / 재시도 중, 잠시만 기다리세요:
   echo ..........
   .venv\Scripts\python skills/translate-doc/translate.py "%INPUT%" --target ko
   if not errorlevel 1 goto :success
   echo.
-  echo [失败 FAILED] 还是不行 / Still failed.
+  echo [FAILED] Still failed. / [실패] 여전히 실패했습니다.
 )
 
 :keeporiginal
 call :keepcopy "%INPUT%"
 echo %DATE% %TIME% 失败 FAILED code=1 "%INPUT%" >> "translated\翻译日志.txt" 2>nul || ver>nul
-echo 网络连不上翻译服务，已保留原文，请稍后再试。
+echo Could not reach translation service, original kept, please try again later. / 번역 서비스에 연결하지 못했습니다. 원본은 보관했으니 나중에 다시 시도하세요.
 pause
 exit /b 1
 
 :success
 echo.
-echo [完成 DONE] 翻译完成，结果在 translated 文件夹 / Done, see translated folder.
+echo [DONE] Translation complete, results in translated folder. / [완료] 번역 완료, translated 폴더에서 확인하세요.
 echo %DATE% %TIME% 成功 SUCCESS code=0 "%INPUT%" >> "translated\翻译日志.txt" 2>nul || ver>nul
 start "" explorer "translated"
 pause
@@ -96,6 +93,6 @@ exit /b 0
 
 :keepcopy
 copy "%~1" "translated\%~n1-原文保留%~x1" >nul 2>&1
-echo 原文已保留为 translated\%~n1-原文保留%~x1
 echo Original kept as translated\%~n1-原文保留%~x1
+echo 원본 보관됨: translated\%~n1-原文保留%~x1
 goto :eof

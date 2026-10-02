@@ -9,8 +9,8 @@
 > 3 steps (Windows 11):
 > 1. Win+X → Terminal, paste + Enter:
 > `powershell -c "irm https://raw.githubusercontent.com/0124212/palimpsest-cn/main/windows/install.ps1 | iex"`
-> 2. Wait until done (翻译爸爸 on the desktop)
-> 3. Drag a Chinese PDF / PPT onto desktop 翻译爸爸 → translation appears in `translated`
+> 2. Wait until done (Dad Translate on the desktop)
+> 3. Drag a Chinese PDF / PPT onto desktop Dad Translate → translation appears in `translated`
 > Manual fallback: download zip, unzip, double-click `windows\setup-dad.bat`, then step 3.
 > Full guides: 🇬🇧 English: **[README.en.md](README.en.md)** · 🇰🇷 한국어: **[README.ko.md](README.ko.md)** · 🇨🇳 中文: **[README.cn.md](README.cn.md)**
 >

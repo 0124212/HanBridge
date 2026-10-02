@@ -20,6 +20,15 @@ import subprocess
 import sys
 from pathlib import Path
 
+# Field fix: Windows consoles (cp1252/cp949, SSH without UTF-8 codepage) die with
+# UnicodeEncodeError on non-ASCII prints. Force UTF-8 w/ replacement so output never crashes.
+for _s in (sys.stdout, sys.stderr):
+    if hasattr(_s, "reconfigure"):
+        try:
+            _s.reconfigure(encoding="utf-8", errors="replace")  # type: ignore[attr-defined] -- guarded by hasattr above; TextIO stub lacks it
+        except Exception:
+            pass
+
 _VENV_BIN = "Scripts" if sys.platform == "win32" else "bin"
 VENV_ACTIVATE = Path(__file__).resolve().parent.parent.parent / ".venv" / _VENV_BIN / "activate"
 PALIMPSEST_ROOT = Path(__file__).resolve().parent.parent.parent
