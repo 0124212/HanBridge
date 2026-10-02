@@ -47,7 +47,7 @@ echo Special chars in filename, still trying (rename recommended)... / 파일명
 echo Translating, please wait: / 번역 중, 잠시만 기다리세요:
 echo %INPUT%
 echo ..........
-.venv\Scripts\python skills/translate-doc/translate.py "%INPUT%" --target ko
+".venv\Scripts\python" "skills\translate-doc\translate.py" "%INPUT%" --target ko
 if not errorlevel 1 goto :success
 
 echo.
@@ -55,7 +55,7 @@ echo First try failed, retrying once in 5s... / 첫 시도 실패, 5초 후 한 
 timeout /t 5 /nobreak >nul 2>&1
 echo Retrying, please wait: / 재시도 중, 잠시만 기다리세요:
 echo ..........
-.venv\Scripts\python skills/translate-doc/translate.py "%INPUT%" --target ko
+".venv\Scripts\python" "skills\translate-doc\translate.py" "%INPUT%" --target ko
 if not errorlevel 1 goto :success
 
 echo.
@@ -70,7 +70,7 @@ if errorlevel 1 (
   pause
   echo Retrying, please wait: / 재시도 중, 잠시만 기다리세요:
   echo ..........
-  .venv\Scripts\python skills/translate-doc/translate.py "%INPUT%" --target ko
+  ".venv\Scripts\python" "skills\translate-doc\translate.py" "%INPUT%" --target ko
   if not errorlevel 1 goto :success
   echo.
   echo [FAILED] Still failed. / [실패] 여전히 실패했습니다.
