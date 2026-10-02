@@ -107,15 +107,17 @@ if not exist "palimpsest.toml" (
 
 REM 5. Desktop shortcuts (English names) -> windows\dad-run.vbs (hidden CMD + popups)
 echo Creating desktop shortcuts... / 바탕화면 바로가기 생성 중...
-REM 5a. Legacy cleanup: remove old Chinese-named shortcuts from earlier installs
+REM 5a. Legacy cleanup: remove old shortcut names from earlier installs
 del "%USERPROFILE%\Desktop\翻译爸爸.lnk" >nul 2>&1
 del "%USERPROFILE%\Desktop\翻译爸爸窗口版.lnk" >nul 2>&1
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$s=(New-Object -ComObject WScript.Shell).CreateShortcut([IO.Path]::Combine([Environment]::GetFolderPath('Desktop'),'Dad Translate.lnk')); $s.TargetPath='wscript.exe'; $s.Arguments='\"'+[IO.Path]::Combine((Get-Location).Path,'windows\dad-run.vbs')+'\"'; $s.WorkingDirectory=(Get-Location).Path; $s.Save()"
-echo [OK] Desktop shortcut ready "Dad Translate". / 바탕화면 "Dad Translate" 준비됨.
+del "%USERPROFILE%\Desktop\Dad Translate.lnk" >nul 2>&1
+del "%USERPROFILE%\Desktop\Dad Translate Window.lnk" >nul 2>&1
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$s=(New-Object -ComObject WScript.Shell).CreateShortcut([IO.Path]::Combine([Environment]::GetFolderPath('Desktop'),'Chinese Translator.lnk')); $s.TargetPath='wscript.exe'; $s.Arguments='\"'+[IO.Path]::Combine((Get-Location).Path,'windows\dad-run.vbs')+'\"'; $s.WorkingDirectory=(Get-Location).Path; $s.Save()"
+echo [OK] Desktop shortcut ready "Chinese Translator". / 바탕화면 "Chinese Translator" 준비됨.
 
 REM 5b. Desktop shortcut (windowed) -> windows\DadTranslate.py
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$s=(New-Object -ComObject WScript.Shell).CreateShortcut([IO.Path]::Combine([Environment]::GetFolderPath('Desktop'),'Dad Translate Window.lnk')); $s.TargetPath=[IO.Path]::Combine((Get-Location).Path,'.venv\Scripts\pythonw.exe'); $s.Arguments='\"'+[IO.Path]::Combine((Get-Location).Path,'windows\DadTranslate.py')+'\"'; $s.WorkingDirectory=(Get-Location).Path; $s.Save()"
-echo [OK] Desktop windowed shortcut ready "Dad Translate Window". / 창 모드 바로가기 "Dad Translate Window" 준비됨.
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$s=(New-Object -ComObject WScript.Shell).CreateShortcut([IO.Path]::Combine([Environment]::GetFolderPath('Desktop'),'Chinese Translator App.lnk')); $s.TargetPath=[IO.Path]::Combine((Get-Location).Path,'.venv\Scripts\pythonw.exe'); $s.Arguments='\"'+[IO.Path]::Combine((Get-Location).Path,'windows\DadTranslate.py')+'\"'; $s.WorkingDirectory=(Get-Location).Path; $s.Save()"
+echo [OK] Desktop windowed shortcut ready "Chinese Translator App". / 창 모드 바로가기 "Chinese Translator App" 준비됨.
 
 REM 6. Offer right-click menu (HKCU, no admin needed)
 echo.
@@ -124,6 +126,6 @@ if /i "%ADDRIGHT%"=="Y" call "windows\add-right-click.bat"
 
 echo.
 echo ============================================
-echo  Done! Drag a file onto Dad Translate to translate. / 완료! 파일을 "Dad Translate"에 드래그하면 번역됩니다.
+echo  Done! Drag a file onto Chinese Translator to translate. / 완료! 파일을 "Chinese Translator"에 드래그하면 번역됩니다.
 echo ============================================
 pause

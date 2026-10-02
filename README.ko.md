@@ -8,8 +8,8 @@
 
 1. Win+X로 터미널 열고 아래 한 줄 붙여넣기 + Enter:
    `powershell -c "irm https://raw.githubusercontent.com/0124212/palimpsest-cn/main/windows/install.ps1 | iex"`
-2. 설치가 끝날 때까지 대기 (바탕화면에 "Dad Translate" 생성)
-3. 중국어 PDF / PPT를 바탕화면 "Dad Translate"에 드래그 → `translated` 폴더에서 번역문 확인
+2. 설치가 끝날 때까지 대기 (바탕화면에 "Chinese Translator" 생성)
+3. 중국어 PDF / PPT를 바탕화면 "Chinese Translator"에 드래그 → `translated` 폴더에서 번역문 확인
 
 수동 방법 / Manual fallback: zip 다운로드·압축 풀기 → `windows\setup-dad.bat` 더블클릭 → 위 3단계로.
 

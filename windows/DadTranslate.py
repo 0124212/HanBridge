@@ -21,7 +21,7 @@ LANG_FILE = Path(__file__).resolve().parent / "lang.json"
 
 STRINGS = {
     "ko": {
-        "title": "Dad Translate (아빠 번역기)",
+        "title": "Chinese Translator App (중국어 번역기)",
         "direction": "중국어 → 한국어",
         "pick": "파일 선택",
         "open_folder": "폴더 열기",
@@ -38,7 +38,7 @@ STRINGS = {
         "log_done": "[DONE] ",
     },
     "en": {
-        "title": "Dad Translate",
+        "title": "Chinese Translator App",
         "direction": "Chinese → Korean",
         "pick": "Choose file",
         "open_folder": "Open folder",

@@ -5,11 +5,11 @@ Dim fso, shell, argPath, cmd
 Set fso = CreateObject("Scripting.FileSystemObject")
 Set shell = CreateObject("WScript.Shell")
 If WScript.Arguments.Count = 0 Then
-  MsgBox "Right-click a file -> Translate to Korean" & vbCrLf & "파일 우클릭 → 한국어로 번역", 64, "Dad Translate"
+  MsgBox "Right-click a file -> Translate to Korean" & vbCrLf & "파일 우클릭 → 한국어로 번역", 64, "Chinese Translator"
   WScript.Quit 0
 End If
 argPath = WScript.Arguments(0)
 cmd = """" & fso.GetParentFolderName(WScript.ScriptFullName) & "\dad-run.bat"" """ & argPath & """"
-shell.Popup "Translating, please wait... / 번역 중, 잠시만 기다리세요...", 2, "Dad Translate", 64
+shell.Popup "Translating, please wait... / 번역 중, 잠시만 기다리세요...", 2, "Chinese Translator", 64
 shell.Run cmd, 1, True
-shell.Popup "Done! Results in translated folder. / 완료! translated 폴더에서 확인.", 0, "Dad Translate", 64
+shell.Popup "Done! Results in translated folder. / 완료! translated 폴더에서 확인.", 0, "Chinese Translator", 64
