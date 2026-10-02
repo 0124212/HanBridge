@@ -64,6 +64,45 @@ echo %C_BLD%^|%C_RST%  6단계, 질문 없음. 메뉴는 --interactive.
 echo %C_BLD%+--------------------------------------------------+%C_RST%
 echo.
 
+:stats
+REM Preflight system-stats box: CPU, RAM, disk free on this drive, GPU.
+REM Unnumbered preflight (like MAX_PATH above) so the [1/6]-[6/6] steps stay consistent.
+set "STATFILE=%TEMP%\palimpsest-stats.txt"
+set "CPUINFO=Unknown CPU"
+set "RAMTOTALGB=?"
+set "RAMFREEGB=?"
+set "DISKFREEGB=?"
+set "DISKDRIVE=%CD:~0,1%"
+set "DISKSTATUS=OK"
+powershell -NoProfile -Command "$c=Get-CimInstance Win32_Processor | Select-Object -First 1; $o=Get-CimInstance Win32_OperatingSystem; $d=Get-PSDrive $PWD.Drive.Name; Write-Output $c.Name; Write-Output ([math]::Round($o.TotalVisibleMemorySize/1MB,1)); Write-Output ([math]::Round($o.FreePhysicalMemory/1MB,1)); Write-Output ([math]::Round($d.Free/1GB,1)); Write-Output $d.Free; Write-Output $PWD.Drive.Name; if ($d.Free -lt 3GB) { Write-Output 'LOW' } else { Write-Output 'OK' }" > "%STATFILE%" 2>nul
+if exist "%STATFILE%" (
+  < "%STATFILE%" (
+    set /p CPUINFO=
+    set /p RAMTOTALGB=
+    set /p RAMFREEGB=
+    set /p DISKFREEGB=
+    set /p DISKFREEBYTES=
+    set /p DISKDRIVE=
+    set /p DISKSTATUS=
+  )
+)
+del "%STATFILE%" >nul 2>&1
+where nvidia-smi >nul 2>&1
+if not errorlevel 1 (
+  set "HASGPU=1"
+  for /f "delims=" %%G in ('nvidia-smi -L 2^>nul') do if not defined GPUCARD set "GPUCARD=%%G"
+)
+echo %C_BLD%+--- System / 시스템 ---%C_RST%
+echo %C_WRK%CPU: %CPUINFO%%C_RST%
+echo %C_WRK%RAM: %RAMTOTALGB% GB total, %RAMFREEGB% GB free / RAM: 전체 %RAMTOTALGB% GB, 여유 %RAMFREEGB% GB%C_RST%
+echo %C_WRK%Disk %DISKDRIVE%: %DISKFREEGB% GB free / 디스크 %DISKDRIVE%: %DISKFREEGB% GB 여유%C_RST%
+if not defined HASGPU (
+  echo %C_WRK%GPU: none, free backend will be used / GPU: 없음, 무료 백엔드 사용%C_RST%
+) else (
+  call :work "GPU: %GPUCARD%" "GPU: %GPUCARD%"
+)
+if "%DISKSTATUS%"=="LOW" goto :lowdisk
+
 REM 0b. Language: --lang / PALIMPSEST_LANG wins; else OS locale auto-detect
 REM (Korean Windows -> KO first); menu ONLY with --interactive.
 if defined PALIMPSEST_LANG set "FLAG_LANG=%PALIMPSEST_LANG%"
@@ -112,12 +151,7 @@ set "PYTHON=python"
 if errorlevel 1 goto :oldpython
 call :ok "Python version OK (%PYTHON%)" "Python 버전 정상 (%PYTHON%)"
 
-REM 1b. GPU silent detect: one info line, no menu (any 12GB+ card runs local 7b models).
-where nvidia-smi >nul 2>&1
-if errorlevel 1 goto :backendmenu
-set "HASGPU=1"
-for /f "delims=" %%G in ('nvidia-smi -L 2^>nul') do if not defined GPUCARD set "GPUCARD=%%G"
-call :work "GPU: %GPUCARD%" "GPU: %GPUCARD%"
+REM 1b. GPU was detected in the :stats preflight above; backend menu gates on HASGPU.
 goto :backendmenu
 
 :nopython
@@ -191,6 +225,12 @@ exit /b 1
 call :err "Folder path too long, Windows limit 260 chars." "폴더 경로가 너무 깁니다 (Windows 260자 제한)."
 call :work "Move this folder to C:\palimpsest-cn and run again." "이 폴더를 C:\palimpsest-cn 으로 옮긴 뒤 다시 실행하세요."
 echo Current path / 현재 경로: "%CD%"
+pause
+exit /b 1
+
+:lowdisk
+call :err "Drive %DISKDRIVE%: only %DISKFREEGB% GB free, need 3 GB for install." "드라이브 %DISKDRIVE%: 여유 %DISKFREEGB% GB, 설치에 3 GB 필요."
+call :work "Free some space and run again." "공간을 확보한 뒤 다시 실행하세요."
 pause
 exit /b 1
 

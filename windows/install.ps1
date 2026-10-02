@@ -25,6 +25,32 @@ Write-Host '|  Zero prompts by default / 기본값은 질문 없음' -Foreground
 Write-Host '+--------------------------------------------------+' -ForegroundColor Cyan
 Write-Host ''
 
+# Preflight system-stats box (compact): CPU, RAM, free space on the HOME drive, GPU.
+$cpu = (Get-CimInstance Win32_Processor | Select-Object -First 1).Name
+$os = Get-CimInstance Win32_OperatingSystem
+$homeDrive = (Get-Item $HOME).PSDrive.Name
+$drv = Get-PSDrive $homeDrive
+$ramT = [math]::Round($os.TotalVisibleMemorySize/1MB,1)
+$ramF = [math]::Round($os.FreePhysicalMemory/1MB,1)
+$diskF = [math]::Round($drv.Free/1GB,1)
+Write-Host '+--- System / 시스템 ---' -ForegroundColor Cyan
+Write-Host "CPU: $cpu" -ForegroundColor Yellow
+Write-Host "RAM: $ramT GB total, $ramF GB free / RAM: 전체 $ramT GB, 여유 $ramF GB" -ForegroundColor Yellow
+Write-Host "Disk $($drv.Name): $diskF GB free / 디스크 $($drv.Name): $diskF GB 여유" -ForegroundColor Yellow
+if ($drv.Free -lt 3GB) {
+  Write-Host "[ERROR] Drive $($drv.Name): only $diskF GB free, need 3 GB. / 드라이브 여유 $diskF GB, 3 GB 필요." -ForegroundColor Red
+  Write-Host 'Free some space and run again. / 공간 확보 후 재실행.' -ForegroundColor Yellow
+  exit 1
+}
+# GPU silent detect (reused below): one info line, no menu.
+$hasGpu = $null -ne (Get-Command nvidia-smi -ErrorAction SilentlyContinue)
+if ($hasGpu) {
+  $card = (nvidia-smi -L 2>$null | Select-Object -First 1)
+  Write-Host "[...] GPU: $card / GPU 감지" -ForegroundColor Yellow
+} else {
+  Write-Host '[...] GPU: none, free backend will be used / GPU: 없음, 무료 백엔드 사용' -ForegroundColor Yellow
+}
+
 # Language: param / env wins; else OS locale (Korean Windows -> KO first); menu ONLY if -Interactive.
 if ([string]::IsNullOrWhiteSpace($Lang)) { $Lang = $env:PALIMPSEST_LANG }
 $Lang = "$Lang".ToLower()
@@ -38,13 +64,6 @@ else {
     $lp = Read-Host 'Pick language / 언어 선택: 1) English (default)  2) 한국어'
     $lang = if ($lp -eq '2') { 'KO' } else { 'EN' }
   }
-}
-
-# GPU silent detect: one info line, no menu.
-$hasGpu = $null -ne (Get-Command nvidia-smi -ErrorAction SilentlyContinue)
-if ($hasGpu) {
-  $card = (nvidia-smi -L 2>$null | Select-Object -First 1)
-  Write-Host "[...] GPU: $card / GPU 감지" -ForegroundColor Yellow
 }
 
 # Backend: param / env wins; else free silently, Ollama only if installed + model present.
