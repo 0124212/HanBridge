@@ -92,15 +92,20 @@ if not errorlevel 1 (
   set "HASGPU=1"
   for /f "delims=" %%G in ('nvidia-smi -L 2^>nul') do if not defined GPUCARD set "GPUCARD=%%G"
 )
+REM Sanitize at capture, outside any block: nvidia-smi names carry parens
+REM e.g. "GPU 0: ... RTX 3060 (UUID: GPU-...)" whose ) would close a block early.
+if defined GPUCARD set "GPUCARD=%GPUCARD:(=%"
+if defined GPUCARD set "GPUCARD=%GPUCARD:)=%"
 echo %C_BLD%+--- System / 시스템 ---%C_RST%
 echo %C_WRK%CPU: %CPUINFO%%C_RST%
 echo %C_WRK%RAM: %RAMTOTALGB% GB total, %RAMFREEGB% GB free / RAM: 전체 %RAMTOTALGB% GB, 여유 %RAMFREEGB% GB%C_RST%
 echo %C_WRK%Disk %DISKDRIVE%: %DISKFREEGB% GB free / 디스크 %DISKDRIVE%: %DISKFREEGB% GB 여유%C_RST%
 if not defined HASGPU (
   echo %C_WRK%GPU: none, free backend will be used / GPU: 없음, 무료 백엔드 사용%C_RST%
-) else (
-  call :work "GPU: %GPUCARD%" "GPU: %GPUCARD%"
+  goto :gpudone
 )
+call :work "GPU: %GPUCARD%" "GPU: %GPUCARD%"
+:gpudone
 if "%DISKSTATUS%"=="LOW" goto :lowdisk
 
 REM 0b. Language: --lang / PALIMPSEST_LANG wins; else OS locale auto-detect
@@ -310,10 +315,10 @@ if "%BACKEND%"=="3" goto :backendworkbuddy
 goto :venv
 
 :backendollama
-if not "%OLLAMA_MODEL%"=="" (
-  call :ok "Keeping existing OLLAMA_MODEL (%OLLAMA_MODEL%)." "기존 OLLAMA_MODEL 유지 (%OLLAMA_MODEL%)."
-  goto :venv
-)
+if "%OLLAMA_MODEL%"=="" goto :setollama
+call :ok "Keeping existing OLLAMA_MODEL (%OLLAMA_MODEL%)." "기존 OLLAMA_MODEL 유지 (%OLLAMA_MODEL%)."
+goto :venv
+:setollama
 set "OLLAMA_MODEL=qwen2.5:7b"
 setx OLLAMA_MODEL "qwen2.5:7b" >nul 2>&1
 call :ok "Ollama model set to qwen2.5:7b. Translate with --backend ollama." "Ollama 모델 qwen2.5:7b 설정. 번역 시 --backend ollama 사용."
@@ -365,14 +370,12 @@ call :step 3 "Installing palimpsest [all], minutes, dots mean working" "palimpse
 set "PIPFLAG=%TEMP%\palimpsest-pip.busy"
 set "DOTLOOP=%TEMP%\palimpsest-dots.bat"
 echo busy > "%PIPFLAG%"
-(
-  echo @echo off
-  echo :dots
-  echo if not exist "%PIPFLAG%" exit
-  echo ^<nul set /p=.^>con
-  echo ping -n 3 127.0.0.1 ^>nul
-  echo goto :dots
-) > "%DOTLOOP%"
+echo @echo off > "%DOTLOOP%"
+echo :dots >> "%DOTLOOP%"
+echo if not exist "%PIPFLAG%" exit >> "%DOTLOOP%"
+echo ^<nul set /p=.^>con >> "%DOTLOOP%"
+echo ping -n 3 127.0.0.1 ^>nul >> "%DOTLOOP%"
+echo goto :dots >> "%DOTLOOP%"
 start /b "" "%DOTLOOP%"
 ".venv\Scripts\python" -m pip install -e ".[all]"
 set "PIPRC=%ERRORLEVEL%"
@@ -390,12 +393,13 @@ call :ok "Install done." "설치 완료."
 
 REM 4. Copy default config if absent
 call :step 4 "Default config" "기본 설정"
-if not exist "palimpsest.toml" (
-  copy "examples\palimpsest.zh-ko.toml" "palimpsest.toml" >nul
-  call :ok "Default config created (zh-ko)." "기본 설정 palimpsest.toml 생성됨 (zh-ko)."
-) else (
-  call :ok "Config already exists, skipped." "설정이 이미 있어 건너뜀."
-)
+if not exist "palimpsest.toml" goto :mkconfig
+call :ok "Config already exists, skipped." "설정이 이미 있어 건너뜀."
+goto :configdone
+:mkconfig
+copy "examples\palimpsest.zh-ko.toml" "palimpsest.toml" >nul
+call :ok "Default config created (zh-ko)." "기본 설정 palimpsest.toml 생성됨 (zh-ko)."
+:configdone
 
 REM 5. Desktop shortcuts (English names) -> windows\dad-run.vbs (hidden CMD + popups)
 call :step 5 "Desktop shortcuts" "바탕화면 바로가기"
