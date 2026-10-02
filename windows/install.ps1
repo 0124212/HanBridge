@@ -1,8 +1,13 @@
 # install.ps1 -- One-liner installer for Dad's translator (palimpsest-cn)
 # Run this ONE line in PowerShell (Win+X -> Terminal): / 아래 한 줄을 PowerShell에 붙여넣기 (Win+X → 터미널):
 #   powershell -c "irm https://raw.githubusercontent.com/0124212/palimpsest-cn/main/windows/install.ps1 | iex"
-# NOTE if scripts are blocked / 스크립트 차단 시: relaunch PowerShell with -ExecutionPolicy Bypass -Scope Process (current window only, no system change).
 # What it does: download cn/main zip -> $HOME\palimpsest-cn -> run setup-dad.bat.
+# Self-relaunch with Bypass for this process only (user-local, no system change):
+if ((Get-ExecutionPolicy -Scope Process) -notin @('Bypass', 'Unrestricted')) {
+  Write-Host 'Policy blocked, relaunching with -ExecutionPolicy Bypass -Scope Process... / 정책 차단, Bypass로 다시 실행 중...'
+  Start-Process powershell -ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-Command',"irm https://raw.githubusercontent.com/0124212/palimpsest-cn/main/windows/install.ps1 | iex" -Wait
+  return
+}
 $ErrorActionPreference = 'Stop'
 $dest = Join-Path $HOME 'palimpsest-cn'
 $zip = Join-Path $env:TEMP 'palimpsest-cn.zip'
