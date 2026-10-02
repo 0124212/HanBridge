@@ -87,6 +87,10 @@ if exist "%STATFILE%" (
   )
 )
 del "%STATFILE%" >nul 2>&1
+REM Sanitize at capture, outside any block: Win32_Processor names carry parens
+REM e.g. "Intel(R) Core(TM) i7-12700F" (same early-close class as GPUCARD was).
+if defined CPUINFO set "CPUINFO=%CPUINFO:(=%"
+if defined CPUINFO set "CPUINFO=%CPUINFO:)=%"
 where nvidia-smi >nul 2>&1
 if not errorlevel 1 (
   set "HASGPU=1"
@@ -447,20 +451,39 @@ echo %C_OK%DONE! / 완료!%C_RST%
 pause
 exit /b 0
 
-REM --- Mini-TUI helpers (call subroutines, LANG picks which language prints first) ---
+REM --- Mini-TUI helpers (call subroutines, LANG picks which language prints first).
+REM Block-free by design: if-goto plus plain echo lines only. A paren-bearing
+REM arg like (py -3.12) expands into a bare echo line where it cannot close
+REM any block (field fix: the old inline if/else shape died on exactly that).
 :ok
-if "%LANG%"=="KO" (echo %C_OK%[OK] %~2 / %~1%C_RST%) else (echo %C_OK%[OK] %~1 / %~2%C_RST%)
+if "%LANG%"=="KO" goto :okko
+echo %C_OK%[OK] %~1 / %~2%C_RST%
+exit /b 0
+:okko
+echo %C_OK%[OK] %~2 / %~1%C_RST%
 exit /b 0
 
 :work
-if "%LANG%"=="KO" (echo %C_WRK%[...] %~2 / %~1%C_RST%) else (echo %C_WRK%[...] %~1 / %~2%C_RST%)
+if "%LANG%"=="KO" goto :workko
+echo %C_WRK%[...] %~1 / %~2%C_RST%
+exit /b 0
+:workko
+echo %C_WRK%[...] %~2 / %~1%C_RST%
 exit /b 0
 
 :err
-if "%LANG%"=="KO" (echo %C_ERR%[ERROR] %~2 / %~1%C_RST%) else (echo %C_ERR%[ERROR] %~1 / %~2%C_RST%)
+if "%LANG%"=="KO" goto :errko
+echo %C_ERR%[ERROR] %~1 / %~2%C_RST%
+exit /b 0
+:errko
+echo %C_ERR%[ERROR] %~2 / %~1%C_RST%
 exit /b 0
 
 :step
 echo.
-if "%LANG%"=="KO" (echo %C_BLD%[%1/6]%C_RST% %C_WRK%%~3 / %~2%C_RST%) else (echo %C_BLD%[%1/6]%C_RST% %C_WRK%%~1 / %~2%C_RST%)
+if "%LANG%"=="KO" goto :stepko
+echo %C_BLD%[%1/6]%C_RST% %C_WRK%%~1 / %~2%C_RST%
+exit /b 0
+:stepko
+echo %C_BLD%[%1/6]%C_RST% %C_WRK%%~3 / %~2%C_RST%
 exit /b 0
