@@ -7,3 +7,8 @@
 *.ttf binary
 *.otf binary
 *.pdf binary
+
+# Windows batch scripts MUST check out as CRLF — CMD.exe fragments LF-only
+# bats into garbage. Blobs stay LF (CI-safe); working copies get CRLF.
+*.bat text eol=crlf
+*.cmd text eol=crlf
