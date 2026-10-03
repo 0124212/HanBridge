@@ -150,6 +150,35 @@ if ($backend -eq '2') { $backendWord = 'ollama' }
 if ($backend -eq '3') { $backendWord = 'workbuddy' }
 $langWord = if ($lang -eq 'KO') { 'ko' } else { 'en' }
 
+# OCR stack for scanned/image PDFs: Tesseract 5.4 + QPDF + chi_sim tessdata.
+# User-local only (winget defaults, APPDATA, setx), never admin. Digital
+# PDFs never need this, so every failure warns and continues.
+$tess = (Get-Command tesseract -ErrorAction SilentlyContinue)
+$qpdfBin = (Get-Command qpdf -ErrorAction SilentlyContinue)
+if (($null -eq $tess) -or ($null -eq $qpdfBin)) {
+  if ($null -ne (Get-Command winget -ErrorAction SilentlyContinue)) {
+    Write-Host 'Installing OCR stack (Tesseract + QPDF)... / OCR 설치 중...' -ForegroundColor Yellow
+    if ($null -eq $tess) { winget install -e --id UB-Mannheim.TesseractOCR --accept-source-agreements --accept-package-agreements }
+    if ($null -eq $qpdfBin) { winget install -e --id QPDF.QPDF --accept-source-agreements --accept-package-agreements }
+  } else {
+    Write-Host '[...] winget missing - OCR skipped. Digital PDFs still work. / winget 없음 - OCR 건너뜀.' -ForegroundColor Yellow
+  }
+}
+$tessDir = Join-Path $env:APPDATA 'palimpsest\tessdata'
+if (-not (Test-Path $tessDir)) { New-Item -ItemType Directory -Path $tessDir -Force | Out-Null }
+$chiSim = Join-Path $tessDir 'chi_sim.traineddata'
+if (-not (Test-Path $chiSim)) {
+  Write-Host 'Downloading chi_sim traineddata, one time... / chi_sim 다운로드 중...' -ForegroundColor Yellow
+  try { Invoke-WebRequest -Uri 'https://github.com/tesseract-ocr/tessdata_fast/raw/main/chi_sim.traineddata' -OutFile $chiSim } catch {
+    Write-Host '[...] chi_sim download failed - digital PDFs still work. / 다운로드 실패.' -ForegroundColor Yellow
+  }
+}
+if (Test-Path $chiSim) {
+  $env:TESSDATA_PREFIX = $tessDir
+  setx.exe TESSDATA_PREFIX $tessDir | Out-Null
+  Write-Host '[OK] OCR stack ready (Tesseract + QPDF + chi_sim). / OCR 준비됨.' -ForegroundColor Green
+}
+
 $dest = Join-Path $HOME 'palimpsest-cn'
 $zip = Join-Path $env:TEMP 'palimpsest-cn.zip'
 $tmpDir = Join-Path $env:TEMP 'palimpsest-cn-main'

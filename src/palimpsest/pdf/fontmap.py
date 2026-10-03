@@ -90,6 +90,20 @@ _BUNDLED_FALLBACK = {
     "mono": "monospace fallback", "serif": "serif fallback", "sans": "sans fallback",
 }
 
+# Preference order when the resolved face cannot render the actual text
+# (see FontResolver.resolve's `text` param). No single system face covers
+# CJK Han + Hangul at once (probed: SimSun/SimHei/Noto SC lack Hangul;
+# Malgun/Noto KR lack Han), so zh->ko output is mixed-script by nature
+# and must fall over to whichever face covers the word at hand.
+# ponytail: word-level face switching only -- a word mixing two scripts
+# with no single covering face still renders tofu; per-character shaping
+# is the upgrade path if that ever matters.
+_COVER_ORDER = (
+    "malgun gothic", "noto sans kr", "noto serif kr", "gulim", "batang",
+    "arial", "calibri", "simsun", "simhei", "noto sans sc", "noto serif sc",
+    "courier new", "georgia",
+)
+
 
 def _font_class(family: str) -> str:
     f = family.lower()
@@ -294,6 +308,7 @@ class FontResolver:
         default_factory=dict, init=False
     )
     _alias_cache: dict[tuple, str] = field(default_factory=dict, init=False)
+    _face_cache: dict[str, fitz.Font | None] = field(default_factory=dict, init=False)
     _built: bool = field(default=False, init=False)
 
     def _scan_dir(self, directory: Path, into: dict) -> None:
@@ -324,6 +339,7 @@ class FontResolver:
         bold: bool | None = None,
         italic: bool | None = None,
         default_family: str | None = None,
+        text: str = "",
     ) -> tuple[Path | None, str, bool, bool, bool]:
         """Return (path, family, bold, italic, substituted) for a PDF font
         name.
@@ -336,6 +352,13 @@ class FontResolver:
         `default_family` supplies the face to use when the name carries
         no usable family -- again the OCR case, where `GlyphLessFont` is
         a placeholder rather than a real typeface.
+
+        `text`, when given, is the actual string about to be rendered:
+        if the resolved face lacks any of its glyphs (e.g. a Chinese
+        SimSun face asked to draw Korean Hangul -- no system face covers
+        both scripts), resolution falls over to the first face that
+        covers the whole string. Unloadable paths (unit-test fake
+        indexes) skip the coverage check and return as before.
 
         `path` is None only when nothing at all could be resolved, in
         which case the caller should fall back to a base-14 name.
@@ -363,23 +386,88 @@ class FontResolver:
         for cand in candidates:
             path = pick(self._index, cand, bold, ital)
             if path:
-                return path, cand, bold, ital, False
+                return self._with_coverage(path, cand, bold, ital, False, text)
 
         klass = _font_class(family)
         sub = _SYSTEM_FALLBACK[klass]
         path = pick(self._index, sub, bold, ital)
         if path:
             self.substitutions[family] = sub
-            return path, sub, bold, ital, True
+            return self._with_coverage(path, sub, bold, ital, True, text)
 
         bundled_sub = _BUNDLED_FALLBACK[klass]
         path = pick(self._bundled_index, bundled_sub, bold, ital)
         if path:
             self.substitutions[family] = f"{bundled_sub} (bundled)"
-            return path, bundled_sub, bold, ital, True
+            return self._with_coverage(path, bundled_sub, bold, ital, True, text)
 
         self.substitutions[family] = "<base14>"
         return None, family, bold, ital, True
+
+    def _face_for(self, path: Path) -> fitz.Font | None:
+        """Cached fitz.Font for a path; None when unloadable (e.g. the
+        fake paths unit tests resolve against -- coverage is unknowable
+        there, and callers treat None as "no information, keep as-is")."""
+        key = str(path)
+        if key not in self._face_cache:
+            try:
+                self._face_cache[key] = fitz.Font(fontfile=key)
+            except Exception:
+                self._face_cache[key] = None
+        return self._face_cache[key]
+
+    def _covers(self, path: Path, text: str) -> bool | None:
+        face = self._face_for(path)
+        if face is None:
+            return None
+        for ch in text:
+            if ch.isspace():
+                continue
+            try:
+                if not face.has_glyph(ord(ch)):
+                    return False
+            except Exception:
+                return None
+        return True
+
+    def _covering_path(
+        self, text: str, bold: bool, italic: bool, skip: set[str]
+    ) -> tuple[Path, str] | None:
+        """First (path, family) covering every char of `text`, or None."""
+        def pick(index: dict, fam: str) -> Path | None:
+            styles = index.get(fam)
+            if not styles:
+                return None
+            for key in ((bold, italic), (bold, False), (False, italic), (False, False)):
+                if key in styles:
+                    return styles[key]
+            return next(iter(styles.values()))
+
+        ordered = [f for f in _COVER_ORDER if f not in skip]
+        ordered += sorted(set(self._index) - set(ordered) - skip)
+        for index in (self._index, self._bundled_index):
+            for fam in ordered:
+                if fam not in index:
+                    continue
+                path = pick(index, fam)
+                if path is None or str(path) in skip:
+                    continue
+                if self._covers(path, text):
+                    return path, fam
+        return None
+
+    def _with_coverage(
+        self, path: Path, family: str, bold: bool, italic: bool,
+        substituted: bool, text: str,
+    ) -> tuple[Path | None, str, bool, bool, bool]:
+        if not text or self._covers(path, text) is not False:
+            return path, family, bold, italic, substituted
+        hit = self._covering_path(text, bold, italic, skip={str(path)})
+        if hit is None:
+            return path, family, bold, italic, substituted
+        cpath, cfam = hit
+        self.substitutions[family] = f"{cfam} (coverage)"
+        return cpath, cfam, bold, italic, True
 
     def alias_for(
         self,
@@ -388,6 +476,7 @@ class FontResolver:
         bold: bool | None = None,
         italic: bool | None = None,
         default_family: str | None = None,
+        text: str = "",
     ) -> str:
         """Install the resolved font on `page` and return the alias to
         render with.
@@ -398,7 +487,9 @@ class FontResolver:
         resource dictionary, so `insert_font` has to run once for every
         page that uses the face.
         """
-        path, family, bold_r, ital_r, _ = self.resolve(fontname, bold, italic, default_family)
+        path, family, bold_r, ital_r, _ = self.resolve(
+            fontname, bold, italic, default_family, text=text
+        )
         doc = page.parent
         key = (id(doc), page.number, family, bold_r, ital_r)
         if key in self._alias_cache:
@@ -422,9 +513,12 @@ class FontResolver:
         bold: bool | None = None,
         italic: bool | None = None,
         default_family: str | None = None,
+        text: str = "",
     ) -> fitz.Font:
         """A fitz.Font for measurement (same face the page will actually render)."""
-        path, family, bold_r, ital_r, _ = self.resolve(fontname, bold, italic, default_family)
+        path, family, bold_r, ital_r, _ = self.resolve(
+            fontname, bold, italic, default_family, text=text
+        )
         if path:
             try:
                 return fitz.Font(fontfile=str(path))

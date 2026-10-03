@@ -22,6 +22,13 @@ fallback = "translatepy"  # free no-key fallback if the primary refuses
 batch_size = 20
 pause_seconds = 0.35
 
+# Scanned/image PDFs: OCR with Simplified-Chinese tessdata (matches
+# OcrConfig default). Windows installer fetches chi_sim.traineddata and
+# sets TESSDATA_PREFIX; override here if yours lives elsewhere.
+[ocr]
+enabled = true
+language = "chi_sim"
+
 # Dual (bilingual 双语对照 PDF): no config field — the palimpsest CLI and the
 # wrapper default to dual ON. Opt out per-run with:
 #   python skills/translate-doc/translate.py "document.pdf" --no-dual

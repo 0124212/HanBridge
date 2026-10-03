@@ -423,7 +423,7 @@ REM 6. Offer right-click menu (HKCU, no admin needed)
 call :step 6 "Right-click menu, optional" "우클릭 메뉴, 선택 사항"
 if not defined FLAG_INTERACTIVE (
   call :work "Right-click menu skipped, default off. Rerun with --interactive to add." "우클릭 메뉴 건너뜀, 기본값 끔. 추가하려면 --interactive로 재실행."
-  goto :summary
+  goto :ocrstack
 )
 echo.
 call :work "Add right-click menu Translate to Korean?" "우클릭 메뉴를 추가할까요?"
@@ -434,6 +434,59 @@ if "%LANG%"=="KO" (
   set /p ADDRIGHT=Add right-click menu Translate to Korean? Y/N / 우클릭 메뉴를 추가할까요?:
 )
 if /i "%ADDRIGHT%"=="Y" call "windows\add-right-click.bat"
+
+:ocrstack
+REM OCR stack for scanned/image PDFs: Tesseract 5.4 + QPDF + chi_sim
+REM tessdata. User-local only (winget defaults, APPDATA, HKCU setx),
+REM never admin. Unnumbered like :stats so the [1/6]-[6/6] steps stay
+REM consistent. Digital PDFs never need this; a missing stack only
+REM affects scanned PDFs, so every failure here warns and continues.
+REM Batch-safe: goto labels plus single-line ifs only, no inline blocks.
+call :work "Checking OCR stack for scanned PDFs..." "스캔 PDF용 OCR 확인 중..."
+set "HAVETESS="
+set "HAVEQPDF="
+where tesseract >nul 2>&1
+if not errorlevel 1 set "HAVETESS=1"
+where qpdf >nul 2>&1
+if not errorlevel 1 set "HAVEQPDF=1"
+if defined HAVETESS if defined HAVEQPDF goto :ocrtessdata
+where winget >nul 2>&1
+if errorlevel 1 goto :noocrwinget
+if not defined HAVETESS winget install -e --id UB-Mannheim.TesseractOCR --accept-source-agreements --accept-package-agreements
+if not defined HAVEQPDF winget install -e --id QPDF.QPDF --accept-source-agreements --accept-package-agreements
+REM winget leaves PATH stale in this shell; prepend the default location.
+set "PATH=C:\Program Files\Tesseract-OCR\;%PATH%"
+where tesseract >nul 2>&1
+if errorlevel 1 goto :noocrtess
+set "HAVETESS=1"
+where qpdf >nul 2>&1
+if errorlevel 1 goto :noocrqpdf
+goto :ocrtessdata
+:ocrtessdata
+set "TESSDIR=%APPDATA%\palimpsest\tessdata"
+if not exist "%TESSDIR%" mkdir "%TESSDIR%"
+if exist "%TESSDIR%\chi_sim.traineddata" goto :ocrpersist
+call :work "Downloading chi_sim traineddata, one time..." "chi_sim 학습 데이터 다운로드 중, 최초 1회..."
+powershell -NoProfile -Command "try { Invoke-WebRequest -Uri 'https://github.com/tesseract-ocr/tessdata_fast/raw/main/chi_sim.traineddata' -OutFile $env:APPDATA+'\palimpsest\tessdata\chi_sim.traineddata' } catch { exit 1 }" >nul 2>&1
+if errorlevel 1 curl.exe -L -o "%TESSDIR%\chi_sim.traineddata" "https://github.com/tesseract-ocr/tessdata_fast/raw/main/chi_sim.traineddata" >nul 2>&1
+if not exist "%TESSDIR%\chi_sim.traineddata" goto :noocrdl
+:ocrpersist
+set "TESSDATA_PREFIX=%TESSDIR%"
+setx TESSDATA_PREFIX "%TESSDIR%" >nul 2>&1
+call :ok "OCR stack ready (Tesseract + QPDF + chi_sim)." "OCR 준비됨 (Tesseract + QPDF + chi_sim)."
+goto :ocrdone
+:noocrwinget
+call :work "winget missing - OCR stack skipped. Digital PDFs still work." "winget 없음 - OCR 건너뜀. 일반 PDF는 정상 동작."
+goto :ocrdone
+:noocrtess
+call :work "Tesseract install failed - OCR skipped. Digital PDFs still work." "Tesseract 설치 실패 - OCR 건너뜀. 일반 PDF는 정상 동작."
+goto :ocrdone
+:noocrqpdf
+call :work "QPDF install failed - OCR skipped. Digital PDFs still work." "QPDF 설치 실패 - OCR 건너뜀. 일반 PDF는 정상 동작."
+goto :ocrdone
+:noocrdl
+call :work "chi_sim download failed - OCR skipped. Digital PDFs still work." "chi_sim 다운로드 실패 - OCR 건너뜀. 일반 PDF는 정상 동작."
+:ocrdone
 
 :summary
 echo.

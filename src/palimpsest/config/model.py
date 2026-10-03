@@ -111,7 +111,9 @@ class PostRulesConfig:
 @dataclass(frozen=True)
 class OcrConfig:
     enabled: bool = True
-    language: str = "spa"
+    # palimpsest-cn fork: Chinese scans need the chi_sim traineddata.
+    # (Upstream default was "spa" for Spanish documents.)
+    language: str = "chi_sim"
     # "" means auto-detect at runtime (see palimpsest.pdf.ocr), not "no
     # tessdata" -- an empty string is never a valid filesystem path, so it
     # can't be confused with a real configured location.
