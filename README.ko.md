@@ -1,4 +1,4 @@
-# palimpsest-cn — 사용 설명서 (한국어)
+# HanBridge — 사용 설명서 (한국어)
 
 중국어 문서(PDF / Word / PowerPoint / Excel)를 **한국어 또는 영어**로 번역합니다.
 **원본 레이아웃이 그대로 유지**됩니다 — 글꼴, 위치, 표, 이미지는 그대로 두고
@@ -9,7 +9,7 @@
 ## 아빠 3단계 / 3 steps (Windows 11)
 
 1. Win+X로 터미널 열고 아래 한 줄 붙여넣기 + Enter:
-   `powershell -c "irm https://raw.githubusercontent.com/0124212/palimpsest-cn/main/windows/install.ps1 | iex"`
+   `powershell -c "irm https://raw.githubusercontent.com/0124212/HanBridge/main/windows/install.ps1 | iex"`
 2. 설치가 끝날 때까지 대기 (바탕화면에 "Chinese Translator" 생성)
 3. 중국어 PDF / PPT를 바탕화면 "Chinese Translator"에 드래그 → `translated` 폴더에서 번역문 확인
 
@@ -46,7 +46,7 @@
 **Windows (PowerShell):**
 
 ```powershell
-git clone https://github.com/0124212/palimpsest-cn.git
+git clone https://github.com/0124212/HanBridge.git
 cd palimpsest-cn
 py -3.11 -m venv .venv
 .venv\Scripts\activate
@@ -56,7 +56,7 @@ pip install -e ".[all]"
 **macOS / Linux:**
 
 ```bash
-git clone https://github.com/0124212/palimpsest-cn.git
+git clone https://github.com/0124212/HanBridge.git
 cd palimpsest-cn
 python3 -m venv .venv
 source .venv/bin/activate

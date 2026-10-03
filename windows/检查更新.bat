@@ -13,6 +13,6 @@ if exist ".venv\Scripts\python.exe" (
 
 echo.
 echo 正在打开更新页面 / Opening releases page:
-echo https://github.com/0124212/palimpsest-cn/releases
-start "" "https://github.com/0124212/palimpsest-cn/releases"
+echo https://github.com/0124212/HanBridge/releases
+start "" "https://github.com/0124212/HanBridge/releases"
 pause

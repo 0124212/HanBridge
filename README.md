@@ -1,6 +1,6 @@
 <h1 align="center">
   <a href="https://ianperaltahirujo.github.io/palimpsest/"><img src="docs/assets/logo.png" width="48" height="48" valign="middle" alt="palimpsest logo — two overlapping page outlines in register"></a>
-  palimpsest-cn
+  HanBridge
 </h1>
 
 > **Dad — start here.**
@@ -8,7 +8,7 @@
 > with layout preserved, using your WorkBuddy tokens (no VPN needed).
 > 3 steps (Windows 11):
 > 1. Win+X → Terminal, paste + Enter:
-> `powershell -c "irm https://raw.githubusercontent.com/0124212/palimpsest-cn/main/windows/install.ps1 | iex"`
+> `powershell -c "irm https://raw.githubusercontent.com/0124212/HanBridge/main/windows/install.ps1 | iex"`
 > 2. Wait until done (Chinese Translator on the desktop)
 > 3. Drag a Chinese PDF / PPT onto desktop Chinese Translator → translation appears in `translated`
 > Manual fallback: download zip, unzip, double-click `windows\setup-dad.bat`, then step 3.
