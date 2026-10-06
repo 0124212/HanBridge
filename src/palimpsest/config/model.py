@@ -111,7 +111,7 @@ class PostRulesConfig:
 @dataclass(frozen=True)
 class OcrConfig:
     enabled: bool = True
-    # palimpsest-cn fork: Chinese scans need the chi_sim traineddata.
+    # HanBridge fork: Chinese scans need the chi_sim traineddata.
     # (Upstream default was "spa" for Spanish documents.)
     language: str = "chi_sim"
     # "" means auto-detect at runtime (see palimpsest.pdf.ocr), not "no

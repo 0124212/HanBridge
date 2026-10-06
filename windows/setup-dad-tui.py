@@ -12,6 +12,7 @@ Help:  python windows\\setup-dad-tui.py --help
 Line endings: .py stays LF per .gitattributes (only *.bat/*.cmd get CRLF).
 """
 import argparse
+import os
 import shutil
 import subprocess
 import sys
@@ -24,16 +25,25 @@ VENV_PYW = ROOT / ".venv" / "Scripts" / "pythonw.exe"
 LANG_FILE = Path(__file__).resolve().parent / "lang.json"
 
 STEPS = [
-    ("1/6 Python check", "1/6 파이썬 확인"),
-    ("2/6 Ready", "2/6 준비"),
-    ("3/6 Installing (a few minutes)", "3/6 설치 중 (몇 분)"),
-    ("4/6 Default settings", "4/6 기본 설정"),
-    ("5/6 Desktop shortcuts", "5/6 바탕화면 바로가기"),
-    ("6/6 Demo try", "6/6 데모 해보기"),
+    ("Python check", "파이썬 확인"),
+    ("Ready", "기본 준비"),
+    ("Installing (a few minutes)", "설치 중 (몇 분)"),
+    ("Default settings", "기본 설정"),
+    ("Desktop shortcuts", "바탕화면 바로가기"),
+    ("Final check", "마무리 확인"),
+]
+
+GUIDE = [
+    "가만히 계세요, 컴퓨터를 확인하고 있어요",
+    "가만히 계세요, 준비하고 있어요",
+    "가만히 계세요, 자동으로 설치 중이에요 (몇 분 걸려요)",
+    "가만히 계세요, 기본 설정을 만들고 있어요",
+    "가만히 계세요, 바탕화면 아이콘을 만들고 있어요",
+    "가만히 계세요, 마지막으로 확인하고 있어요",
 ]
 
 STRINGS = {
-    "ko": {"title": "아빠 번역기 설치 (6단계)", "next": "다음", "retry": "다시 시도",
+    "ko": {"title": "HanBridge 설치 (6단계)", "next": "다음", "retry": "다시 시도",
            "toggle": "English", "ok": "완료!", "fail": "실패 — 원본은 그대로, 다시 시도하세요.",
            "idle": "대기 중", "working": "진행 중...", "done": "성공", "failed": "실패",
            "free_note": "무료 방식 사용 중", "gpu_note": "그래픽카드 발견",
@@ -44,7 +54,7 @@ STRINGS = {
                       "기본 설정 실패 — 다시 시도하세요",
                       "바로가기 실패 — 다시 시도하세요",
                       "데모 실패 — 다시 시도하세요"]},
-    "en": {"title": "Dad Translator Setup (6 steps)", "next": "Next", "retry": "Retry",
+    "en": {"title": "HanBridge Setup (6 steps)", "next": "Next", "retry": "Retry",
            "toggle": "한국어", "ok": "Done!", "fail": "Failed — original kept, please retry.",
            "idle": "idle", "working": "working...", "done": "ok", "failed": "failed",
            "free_note": "Free mode", "gpu_note": "GPU found",
@@ -166,19 +176,26 @@ def run_step(n, dry=False, lang="ko"):
             return False, fail_msg(4, lang)
     if n == 5:
         if dry:
-            return True, "create 2 desktop shortcuts (Chinese Translator [+ App])"
+            return True, "create 2 desktop shortcuts (HanBridge + HanBridge Windowed)"
+        d = Path(os.environ.get("USERPROFILE", str(Path.home()))) / "Desktop"
+        for _old in ("Chinese Translator.lnk", "Chinese Translator App.lnk",
+                      "Dad Translate.lnk", "Dad Translate Window.lnk"):
+            try:
+                (d / _old).unlink()
+            except OSError:
+                pass
         vbs = str(ROOT / "windows" / "dad-run.vbs")
         ps1 = ("$s=(New-Object -ComObject WScript.Shell).CreateShortcut("
-               "[IO.Path]::Combine([Environment]::GetFolderPath('Desktop'),'Chinese Translator.lnk')); "
+               "[IO.Path]::Combine([Environment]::GetFolderPath('Desktop'),'HanBridge.lnk')); "
                f"$s.TargetPath='wscript.exe'; $s.Arguments='\"{vbs}\"'; "
-               f"$s.WorkingDirectory='{ROOT}'; $s.Save()")
+               f"$s.WorkingDirectory='{ROOT}'; $s.Description='중국어 PDF를 여기에 드래그하면 한국어로 번역됩니다'; $s.Save()")
         r1 = subprocess.run(["powershell", "-NoProfile", "-Command", ps1], capture_output=True)
-        app_py = str(ROOT / "windows" / "DadTranslate.py")
+        app_py = str(ROOT / "windows" / "HanBridge.py")
         pyw = str(VENV_PYW if VENV_PYW.exists() else sys.executable)
         ps2 = ("$s=(New-Object -ComObject WScript.Shell).CreateShortcut("
-               "[IO.Path]::Combine([Environment]::GetFolderPath('Desktop'),'Chinese Translator App.lnk')); "
+               "[IO.Path]::Combine([Environment]::GetFolderPath('Desktop'),'HanBridge Windowed.lnk')); "
                f"$s.TargetPath='{pyw}'; $s.Arguments='\"{app_py}\"'; "
-               f"$s.WorkingDirectory='{ROOT}'; $s.Save()")
+               f"$s.WorkingDirectory='{ROOT}'; $s.Description='더블클릭하면 번역할 파일을 고릅니다'; $s.Save()")
         r2 = subprocess.run(["powershell", "-NoProfile", "-Command", ps2], capture_output=True)
         ok = r1.returncode == 0 and r2.returncode == 0
         return (ok, "shortcuts ready (2)" if ok else fail_msg(5, lang))
@@ -213,7 +230,7 @@ def main(argv=None):
         print(f"backend: {b} ({note})")
         for i, (en, ko) in enumerate(STEPS, 1):
             ok, desc = run_step(i, dry=True)
-            print(f"[{i}/6] {en} / {ko} -> {desc}")
+            print(f"[{i}/6] {ko} / {en} -> {desc}")
         return 0
 
     if args.step:
@@ -231,12 +248,19 @@ def main(argv=None):
         return STRINGS[lang[0]][k]
 
     root = tk.Tk()
+    hdr = tk.Label(root, font=("", 16))
+    hdr.pack(pady=10)
     rows, labels = [], []
-    pulse = {"on": False, "n": 0}
+    pulse = {"on": False, "n": 0, "msg": ""}
 
     def apply():
         # Guard: after final success idx == len(STEPS); never index past end.
         root.title(t("title"))
+        if idx[0] >= len(STEPS):
+            hdr.config(text=t("ok"), fg="green")
+        else:
+            en, ko = STEPS[idx[0]]
+            hdr.config(text=f"[{idx[0] + 1}/6] {ko} / {en}", fg="black")
         toggle_btn.config(text=t("toggle"))
         if idx[0] >= len(STEPS):
             next_btn.config(text=t("ok"), state="disabled")
@@ -254,17 +278,22 @@ def main(argv=None):
             return
         pulse["n"] = (pulse["n"] + 1) % 4
         dots = "." * pulse["n"]
-        status.config(text=f"{t('working')}{dots}", fg="black")
+        status.config(text=f"{pulse['msg']}{dots}", fg="black")
         root.after(500, tick)
 
+    busy = [False]
+
     def advance():
-        if idx[0] >= len(STEPS):
+        if idx[0] >= len(STEPS) or busy[0]:
             return
+        busy[0] = True
         i = idx[0]
         labels[i][1] = "working"
         next_btn.config(state="disabled")  # disable Next while working
         pulse["on"] = True
         pulse["n"] = 0
+        pulse["msg"] = GUIDE[i]
+        status.config(text=GUIDE[i], fg="black")
         tick()  # liveness dots / 진행 중 pulse (matters for pip step)
         apply()
         cur_lang = lang[0]
@@ -274,15 +303,23 @@ def main(argv=None):
 
             def finish():
                 pulse["on"] = False
+                busy[0] = False
                 labels[i][0], labels[i][1] = msg, ("done" if ok else "failed")
                 if ok:
                     idx[0] += 1
                 if idx[0] >= len(STEPS):
-                    status.config(text=t("ok"), fg="green")
+                    done_msg = ("완료! 바탕화면 HanBridge 아이콘을 쓰세요"
+                                if cur_lang == "ko" else STRINGS["en"]["ok"])
+                    status.config(text=done_msg, fg="green")
                 elif not ok:
-                    status.config(text=f"{t('fail')} ({msg})", fg="red")
+                    print(f"[fail] step {i + 1}: {msg}")
+                    status.config(text=t("fail"), fg="red")
                 else:
-                    status.config(text=msg, fg="green")
+                    status.config(text=t("ok"), fg="green")
+                    next_btn.config(state="disabled")
+                    root.after(900, advance)  # auto-advance, dad clicks once total
+                    apply()
+                    return
                 next_btn.config(state="normal" if idx[0] < len(STEPS) else "disabled")
                 apply()
             root.after(0, finish)  # push result via root.after()
@@ -317,7 +354,7 @@ def main(argv=None):
         rows.append(lbl)
     status = tk.Label(root, font=("", 12))
     status.pack(pady=8)
-    next_btn = tk.Button(root, font=("", 14), width=16, height=1, command=advance)
+    next_btn = tk.Button(root, font=("", 18), width=24, height=2, command=advance)
     next_btn.pack(pady=10)
     backend_label.config(text=backend_text())
     apply()

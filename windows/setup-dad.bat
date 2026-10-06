@@ -58,9 +58,9 @@ goto :longpath
 :pathok
 REM Boxed title header (ASCII box: renders on every Windows console).
 echo %C_BLD%+--------------------------------------------------+%C_RST%
-echo %C_BLD%^|%C_RST%  Dad's Translator Setup / 아빠 번역기 설치
-echo %C_BLD%^|%C_RST%  6 steps, zero prompts. Add --interactive for menus.
-echo %C_BLD%^|%C_RST%  6단계, 질문 없음. 메뉴는 --interactive.
+echo %C_BLD%^|%C_RST%  HanBridge 설치 — 6단계, 질문 없음
+echo %C_BLD%^|%C_RST%  그냥 기다리세요. 끝나면 알려드립니다.
+echo %C_BLD%^|%C_RST%  파란 화면(SmartScreen)이 막으면 [추가 정보] → [실행]을 누르세요.
 echo %C_BLD%+--------------------------------------------------+%C_RST%
 echo.
 
@@ -138,7 +138,7 @@ set /p LANGPICK=Choose 1 or 2, Enter=1 / 선택 1 또는 2, Enter=1:
 if "%LANGPICK%"=="2" (set "LANG=KO") else (set "LANG=EN")
 :langdone
 
-call :step 1 "Checking Python 3.11+" "Python 3.11+ 확인 중"
+call :step 1 "Python check" "파이썬 확인"
 REM 1. Check python >= 3.11. Prefer py launcher first (bypasses broken
 REM    Windows Store python3.exe shim); plain `python` second (field: plain
 REM    `python` may be broken uv-trampoline or a 0KB Store alias).
@@ -173,10 +173,9 @@ call :ok "Python auto-installed." "Python 자동 설치 완료."
 goto :backendmenu
 
 :manualpython
-call :err "Please install Python 3.11+ manually:" "Python 3.11+ 수동 설치 필요:"
-echo https://www.python.org/downloads/
-call :work "Tick Add python.exe to PATH during install." "설치 시 Add python.exe to PATH 체크."
-call :work "Then double-click this script again." "설치 후 이 스크립트를 다시 더블클릭하세요."
+call :err "자동 설치에 실패했습니다." "자동 설치 실패."
+call :work "인터넷 연결을 확인하고 이 창을 닫으세요." "인터넷 확인 후 재시도."
+call :work "그리고 setup-dad.bat을 다시 더블클릭하세요." "다시 더블클릭."
 pause
 exit /b 1
 
@@ -223,16 +222,15 @@ if errorlevel 1 exit /b 1
 exit /b 0
 
 :manualoldpython
-call :err "Auto-upgrade failed, please upgrade manually:" "자동 업그레이드 실패, 수동 업그레이드 필요:"
-echo https://www.python.org/downloads/
-call :work "Tick Add python.exe to PATH during install." "설치 시 Add python.exe to PATH 체크."
-call :work "Then double-click this script again." "설치 후 이 스크립트를 다시 더블클릭하세요."
+call :err "자동 업그레이드에 실패했습니다." "자동 업그레이드 실패."
+call :work "인터넷 연결을 확인하고 이 창을 닫으세요." "인터넷 확인 후 재시도."
+call :work "그리고 setup-dad.bat을 다시 더블클릭하세요." "다시 더블클릭."
 pause
 exit /b 1
 
 :longpath
 call :err "Folder path too long, Windows limit 260 chars." "폴더 경로가 너무 깁니다 (Windows 260자 제한)."
-call :work "Move this folder to C:\palimpsest-cn and run again." "이 폴더를 C:\palimpsest-cn 으로 옮긴 뒤 다시 실행하세요."
+call :work "Move this folder to C:\HanBridge and run again." "이 폴더를 C:\HanBridge 으로 옮긴 뒤 다시 실행하세요."
 echo Current path / 현재 경로: "%CD%"
 pause
 exit /b 1
@@ -333,6 +331,14 @@ if defined WORKBUDDY_API_KEY (
   call :ok "WorkBuddy key already set, keeping it." "WorkBuddy 키가 이미 있어 유지."
   goto :venv
 )
+REM Dad-proof: no key + no --interactive = free default, never prompt for secrets.
+if not defined FLAG_INTERACTIVE (
+  call :work "No WorkBuddy key, using free default, no questions." "키 없음 - 질문 없이 무료 방식으로 진행."
+  set "BACKEND=1"
+  set "BACKENDNAME=Free translatepy, no key"
+  set "BACKENDNAME_KO=무료 translatepy, 키 불필요"
+  goto :venv
+)
 echo.
 call :work "WorkBuddy needs 3 values from Tencent Cloud console." "Tencent Cloud 콘솔에서 3개 값 확인."
 set "WB_BASE="
@@ -360,7 +366,7 @@ call :ok "WorkBuddy keys saved for this user. Test one word first." "WorkBuddy �
 goto :venv
 
 :venv
-call :step 2 "Virtual environment" "가상환경"
+call :step 2 "Ready" "기본 준비"
 REM 2. Create .venv if absent
 if not exist ".venv" (
   call :work "Creating virtual environment..." "가상환경 생성 중..."
@@ -370,7 +376,7 @@ if not exist ".venv" (
 )
 
 REM 3. Install (keyless default: translatepy via [all])
-call :step 3 "Installing palimpsest [all], minutes, dots mean working" "palimpsest [all] 설치 중, 수 분 소요, 점이 찍히면 정상"
+call :step 3 "Installing (a few minutes)" "설치 중 (몇 분)"
 set "PIPFLAG=%TEMP%\palimpsest-pip.busy"
 set "DOTLOOP=%TEMP%\palimpsest-dots.bat"
 echo busy > "%PIPFLAG%"
@@ -396,7 +402,7 @@ echo.
 call :ok "Install done." "설치 완료."
 
 REM 4. Copy default config if absent
-call :step 4 "Default config" "기본 설정"
+call :step 4 "Default settings" "기본 설정"
 if not exist "palimpsest.toml" goto :mkconfig
 call :ok "Config already exists, skipped." "설정이 이미 있어 건너뜀."
 goto :configdone
@@ -412,15 +418,17 @@ del "%USERPROFILE%\Desktop\翻译爸爸.lnk" >nul 2>&1
 del "%USERPROFILE%\Desktop\翻译爸爸窗口版.lnk" >nul 2>&1
 del "%USERPROFILE%\Desktop\Dad Translate.lnk" >nul 2>&1
 del "%USERPROFILE%\Desktop\Dad Translate Window.lnk" >nul 2>&1
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$s=(New-Object -ComObject WScript.Shell).CreateShortcut([IO.Path]::Combine([Environment]::GetFolderPath('Desktop'),'Chinese Translator.lnk')); $s.TargetPath='wscript.exe'; $s.Arguments='\"'+[IO.Path]::Combine((Get-Location).Path,'windows\dad-run.vbs')+'\"'; $s.WorkingDirectory=(Get-Location).Path; $s.Save()"
-call :ok "Desktop shortcut ready Chinese Translator." "바탕화면 Chinese Translator 준비됨."
+del "%USERPROFILE%\Desktop\Chinese Translator.lnk" >nul 2>&1
+del "%USERPROFILE%\Desktop\Chinese Translator App.lnk" >nul 2>&1
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$s=(New-Object -ComObject WScript.Shell).CreateShortcut([IO.Path]::Combine([Environment]::GetFolderPath('Desktop'),'HanBridge.lnk')); $s.TargetPath='wscript.exe'; $s.Arguments='\"'+[IO.Path]::Combine((Get-Location).Path,'windows\dad-run.vbs')+'\"'; $s.WorkingDirectory=(Get-Location).Path; $s.Description='중국어 PDF를 여기에 드래그하면 한국어로 번역됩니다'; $s.Save()"
+call :ok "Desktop shortcut ready HanBridge." "바탕화면 HanBridge 준비됨."
 
-REM 5b. Desktop shortcut (windowed) -> windows\DadTranslate.py
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$s=(New-Object -ComObject WScript.Shell).CreateShortcut([IO.Path]::Combine([Environment]::GetFolderPath('Desktop'),'Chinese Translator App.lnk')); $s.TargetPath=[IO.Path]::Combine((Get-Location).Path,'.venv\Scripts\pythonw.exe'); $s.Arguments='\"'+[IO.Path]::Combine((Get-Location).Path,'windows\DadTranslate.py')+'\"'; $s.WorkingDirectory=(Get-Location).Path; $s.Save()"
-call :ok "Desktop windowed shortcut ready Chinese Translator App." "창 모드 바로가기 Chinese Translator App 준비됨."
+REM 5b. Desktop shortcut (windowed) -> windows\HanBridge.py
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$s=(New-Object -ComObject WScript.Shell).CreateShortcut([IO.Path]::Combine([Environment]::GetFolderPath('Desktop'),'HanBridge Windowed.lnk')); $s.TargetPath=[IO.Path]::Combine((Get-Location).Path,'.venv\Scripts\pythonw.exe'); $s.Arguments='\"'+[IO.Path]::Combine((Get-Location).Path,'windows\HanBridge.py')+'\"'; $s.WorkingDirectory=(Get-Location).Path; $s.Description='더블클릭하면 번역할 파일을 고릅니다'; $s.Save()"
+call :ok "Desktop windowed shortcut ready HanBridge Windowed." "창 모드 바로가기 HanBridge Windowed 준비됨."
 
 REM 6. Offer right-click menu (HKCU, no admin needed)
-call :step 6 "Right-click menu, optional" "우클릭 메뉴, 선택 사항"
+call :step 6 "Final check" "마무리 확인"
 if not defined FLAG_INTERACTIVE (
   call :work "Right-click menu skipped, default off. Rerun with --interactive to add." "우클릭 메뉴 건너뜀, 기본값 끔. 추가하려면 --interactive로 재실행."
   goto :ocrstack
@@ -491,14 +499,13 @@ call :work "chi_sim download failed - OCR skipped. Digital PDFs still work." "ch
 :summary
 echo.
 echo %C_BLD%+--------------------------------------------------+%C_RST%
-echo %C_BLD%^| SUMMARY / 요약%C_RST%
+echo %C_BLD%^| 설치 완료! 아래 3개만 기억하세요%C_RST%
 echo %C_BLD%+--------------------------------------------------+%C_RST%
-if "%LANG%"=="KO" echo %C_OK%[OK] 설치됨: .venv + palimpsest [all] / Installed: .venv + palimpsest [all]%C_RST% else echo %C_OK%[OK] Installed: .venv + palimpsest [all] / 설치됨: .venv + palimpsest [all]%C_RST%
-if "%LANG%"=="KO" echo %C_OK%[OK] 백엔드: %BACKENDNAME_KO% / Backend: %BACKENDNAME%%C_RST% else echo %C_OK%[OK] Backend: %BACKENDNAME% / 백엔드: %BACKENDNAME_KO%%C_RST%
-if "%LANG%"=="KO" echo %C_OK%[OK] 바탕화면 아이콘 2개: Chinese Translator + Chinese Translator App / Desktop icons: 2%C_RST% else echo %C_OK%[OK] Desktop icons: Chinese Translator + Chinese Translator App / 바탕화면 아이콘 2개%C_RST%
-if "%LANG%"=="KO" echo %C_WRK%[...] 사용법: 파일을 아이콘에 드래그 / How to translate: drag a file onto the icon%C_RST% else echo %C_WRK%[...] How to translate: drag a file onto the icon / 사용법: 파일을 아이콘에 드래그%C_RST%
-if "%LANG%"=="KO" echo %C_WRK%[...] 결과물: 원본 옆 translated 폴더 / Outputs: translated folder next to your file%C_RST% else echo %C_WRK%[...] Outputs: translated folder next to your file / 결과물: 원본 옆 translated 폴더%C_RST%
-if "%LANG%"=="KO" echo %C_WRK%[...] 관리자 불필요: HKCU + LOCALAPPDATA만 사용 / No admin used: HKCU + LOCALAPPDATA only%C_RST% else echo %C_WRK%[...] No admin used: HKCU + LOCALAPPDATA only / 관리자 불필요: HKCU + LOCALAPPDATA만 사용%C_RST%
+echo %C_OK%[1] 바탕화면에 HanBridge 아이콘이 2개 생겼습니다%C_RST%
+echo %C_OK%[2] 중국어 PDF를 아이콘에 드래그하면 번역됩니다%C_RST%
+echo %C_OK%[3] 결과는 원본 파일 옆 translated 폴더에 저장됩니다%C_RST%
+echo %C_BLD%+--------------------------------------------------+%C_RST%
+echo %C_OK%DONE! / 완료! — 이 창은 닫으셔도 됩니다%C_RST%
 echo %C_BLD%+--------------------------------------------------+%C_RST%
 echo %C_OK%DONE! / 완료!%C_RST%
 pause
@@ -534,9 +541,6 @@ exit /b 0
 
 :step
 echo.
-if "%LANG%"=="KO" goto :stepko
-echo %C_BLD%[%1/6]%C_RST% %C_WRK%%~1 / %~2%C_RST%
-exit /b 0
-:stepko
 echo %C_BLD%[%1/6]%C_RST% %C_WRK%%~3 / %~2%C_RST%
+echo %C_WRK%    가만히 계세요, 자동으로 진행 중이에요%C_RST%
 exit /b 0

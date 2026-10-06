@@ -19,7 +19,7 @@ Only the words change language.
 
 ```powershell
 git clone https://github.com/0124212/HanBridge.git
-cd palimpsest-cn
+cd HanBridge
 py -3.11 -m venv .venv
 .venv\Scripts\activate
 pip install -e ".[all]"
@@ -29,7 +29,7 @@ pip install -e ".[all]"
 
 ```bash
 git clone https://github.com/0124212/HanBridge.git
-cd palimpsest-cn
+cd HanBridge
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -e ".[all]"

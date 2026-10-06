@@ -3,7 +3,7 @@
 #   powershell -ExecutionPolicy Bypass -File Build-Portable.ps1 [-DryRun] [-OutDir .\HanBridge-Portable]
 # -DryRun (default ON when -OutDir is omitted): print URLs + layout, download nothing.
 # Real run: .\Build-Portable.ps1 -OutDir C:\hb-portable   (DryRun auto-off with -OutDir)
-# Result is xcopy-able: zip the OutDir, Dad unzips, double-clicks Translate-CN.bat.
+# Result is xcopy-able: zip the OutDir, Dad unzips, double-clicks HanBridge.bat.
 param(
   [string]$OutDir = '',
   [switch]$DryRun
@@ -11,12 +11,12 @@ param(
 $ErrorActionPreference = 'Stop'
 
 # Layout assembled under $OutDir:
-#   Translate-CN.bat  (copied from this repo's windows/portable/)
+#   HanBridge.bat  (copied from this repo's windows/portable/)
 #   python/           (embeddable python 3.12 + pip + .[all] via --target)
 #   bin/              (tesseract.exe + leptonica DLLs; QPDF NOT needed -- pikepdf wheel bundles libqpdf)
 #   tessdata/         (chi_sim + chi_tra + eng + osd, tessdata_fast)
 #   fonts/            (Noto Sans CJK KR + SC -- Malgun/SimSun can't redistribute)
-#   app/              (repo copy: skills/, windows/DadTranslate.py, examples/*.zh-ko.toml)
+#   app/              (repo copy: skills/, windows/HanBridge.py, examples/*.zh-ko.toml)
 if ([string]::IsNullOrWhiteSpace($OutDir)) { $DryRun = $true }
 
 $PY_VER  = '3.12.7'
@@ -40,7 +40,7 @@ if ($DryRun) {
   Write-Host "  tessdata          : $($TESSDATA_FILES -join ', ')  ($TESSDATA_BASE/...)"
   Write-Host "  fonts             : $($FONT_FILES -join ', ')  ($FONTS_BASE/...)"
   Write-Host '  pip target        : python\Lib\site-packages  (repo .[all] from OutDir\app source)'
-  Write-Host '  app copy          : skills/ windows/DadTranslate.py examples/palimpsest.zh-ko.toml README* + MANIFEST.txt'
+  Write-Host '  app copy          : skills/ windows/HanBridge.py examples/palimpsest.zh-ko.toml README* + MANIFEST.txt'
   return
 }
 
@@ -104,12 +104,12 @@ foreach ($f in $FONT_FILES) {
 Step 'app + pip install...'
 $repoRoot = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 Copy-Item (Join-Path $repoRoot 'skills') (Join-Path $appDir 'skills') -Recurse -Force
-Copy-Item (Join-Path $repoRoot 'windows\DadTranslate.py') (Join-Path $appDir 'windows\DadTranslate.py') -Force
+Copy-Item (Join-Path $repoRoot 'windows\HanBridge.py') (Join-Path $appDir 'windows\HanBridge.py') -Force
 Copy-Item (Join-Path $repoRoot 'examples\palimpsest.zh-ko.toml') (Join-Path $appDir 'palimpsest.zh-ko.toml') -Force
-Copy-Item (Join-Path $PSScriptRoot 'Translate-CN.bat') $OutDir -Force
+Copy-Item (Join-Path $PSScriptRoot 'HanBridge.bat') $OutDir -Force
 Copy-Item (Join-Path $PSScriptRoot 'README-DAD.*.md') $OutDir -Force -ErrorAction SilentlyContinue
 & "$pyDir\python.exe" -m pip install --target "$pyDir\Lib\site-packages" "$repoRoot[all]"
-$manifest += "palimpsest $((Get-FileHash (Join-Path $appDir 'windows\DadTranslate.py') -Algorithm SHA256).Hash) (repo snapshot)"
+$manifest += "palimpsest $((Get-FileHash (Join-Path $appDir 'windows\HanBridge.py') -Algorithm SHA256).Hash) (repo snapshot)"
 
 # 5. MANIFEST.txt: what + where + SHA256.
 Step 'manifest...'

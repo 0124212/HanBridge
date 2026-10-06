@@ -1,4 +1,4 @@
-# HanBridge Portable Chinese Translator — 3 steps
+# HanBridge Portable — 3 steps
 
 No install. No admin rights needed.
 
@@ -6,11 +6,11 @@ No install. No admin rights needed.
 
 1. **Unzip** — extract the zip to a SHORT path, e.g. `C:\hanbridge`.
    (Paths over ~100 chars break the embedded Python. Avoid deep Desktop folders.)
-2. **Unblock** — right-click `Translate-CN.bat` → Properties → check
+2. **Unblock** — right-click `HanBridge.bat` → Properties → check
    **Unblock** at the bottom → OK.
    (If SmartScreen warns, click "More info" → "Run anyway".)
-3. **Double-click** — double-click `Translate-CN.bat` to open the translator window.
-   Or **drag a PDF onto** the `Translate-CN.bat` icon to translate it directly.
+3. **Double-click** — double-click `HanBridge.bat` to open the translator window.
+   Or **drag a PDF onto** the `HanBridge.bat` icon to translate it directly.
 
 ## Where do outputs go?
 

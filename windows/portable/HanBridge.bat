@@ -1,5 +1,5 @@
 @echo off
-REM Translate-CN.bat -- portable dad-proof launcher, zero install.
+REM HanBridge.bat -- portable dad-proof launcher, zero install.
 REM Unzip anywhere, double-click (opens the window app) or drag a PDF onto
 REM this file (translates it straight to Korean + bilingual PDF).
 REM No admin, no setx, no winget, no network setup -- everything resolves
@@ -24,7 +24,7 @@ goto :cli
 
 :gui
 REM No file given: open the windowed app (tkinter, Korean default).
-"%ROOT%python\pythonw.exe" "%ROOT%app\windows\DadTranslate.py"
+"%ROOT%python\pythonw.exe" "%ROOT%app\windows\HanBridge.py"
 goto :done
 
 :cli
@@ -35,22 +35,23 @@ if defined WORKBUDDY_API_KEY set "BACKEND=workbuddy"
 "%ROOT%python\python.exe" "%ROOT%app\skills\translate-doc\translate.py" "%~1" --target ko --backend %BACKEND% --dual
 if errorlevel 1 goto :failed
 echo.
-echo Done! Output is in the translated folder next to your file.
-echo Press any key to close.
+echo 완료! 원본 옆 translated 폴더를 보세요.
+for %%F in ("%~1") do start "" explorer "%%~dpFtranslated"
+echo 계속하려면 아무 키나 누르세요...
 pause >nul
 goto :done
 
 :failed
 echo.
-echo Translation failed -- check the message above and try again.
-echo Needs internet (translatepy). Press any key to close.
+echo 실패했습니다. 원본은 그대로 있습니다. 인터넷을 확인하고 다시 시도하세요.
+echo 계속하려면 아무 키나 누르세요...
 pause >nul
 goto :done
 
 :longpath
-echo Folder path too long, Windows limit 260 chars.
-echo Move this folder somewhere short like C:\hanbridge and run again.
-echo Current path: "%ROOT%"
+echo 폴더 경로가 너무 깁니다 (Windows 260자 제한).
+echo C:\hanbridge 같은 짧은 곳으로 옮긴 뒤 다시 실행하세요.
+echo 현재 경로: "%ROOT%"
 pause
 goto :done
 

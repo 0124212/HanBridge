@@ -9,7 +9,7 @@ param(
   [switch]$Yes,
   [switch]$Interactive
 )
-# What it does: resolve picks -> download cn/main zip -> $HOME\palimpsest-cn -> run setup-dad.bat.
+# What it does: resolve picks -> download main zip -> $HOME\HanBridge -> run setup-dad.bat.
 # Self-relaunch with Bypass for this process only (user-local, no system change):
 if ((Get-ExecutionPolicy -Scope Process) -notin @('Bypass', 'Unrestricted')) {
   Write-Host 'Policy blocked, relaunching with -ExecutionPolicy Bypass -Scope Process... / 정책 차단, Bypass로 다시 실행 중...' -ForegroundColor Yellow
@@ -20,7 +20,7 @@ $ErrorActionPreference = 'Stop'
 
 # Boxed header (cyan) - progress display, no decisions here.
 Write-Host '+--------------------------------------------------+' -ForegroundColor Cyan
-Write-Host '|  Dad Translator Setup / 아빠 번역기 설치' -ForegroundColor Cyan
+Write-Host '|  HanBridge Setup / HanBridge 설치' -ForegroundColor Cyan
 Write-Host '|  Zero prompts by default / 기본값은 질문 없음' -ForegroundColor Cyan
 Write-Host '+--------------------------------------------------+' -ForegroundColor Cyan
 Write-Host ''
@@ -121,7 +121,7 @@ if ($backend -eq '3') {
     if ($Yes) {
       Write-Host '[ERROR] WorkBuddy picked but no key and -Yes given - free default. / 키 없고 -Yes - 무료 기본값.' -ForegroundColor Red
       $backend = '1'
-    } else {
+    } elseif ($Interactive) {
       Write-Host 'WorkBuddy needs 3 values from Tencent Cloud console. / 콘솔에서 3개 값 확인.' -ForegroundColor Yellow
       $wbBase = Read-Host 'API Base (Enter=default)'
       if ([string]::IsNullOrWhiteSpace($wbBase)) { $wbBase = 'https://tokenhub-intl.tencentcloudmaas.com/v1' }
@@ -140,6 +140,9 @@ if ($backend -eq '3') {
         setx.exe WORKBUDDY_MODEL $wbModel | Out-Null
         Write-Host '[OK] WorkBuddy keys saved for this user. / WorkBuddy 키 저장됨.' -ForegroundColor Green
       }
+    } else {
+      Write-Host '[...] WorkBuddy picked but no key - free default, no questions asked. / 키 없음 - 질문 없이 무료 방식으로 진행.' -ForegroundColor Yellow
+      $backend = '1'
     }
   }
 }
@@ -179,9 +182,9 @@ if (Test-Path $chiSim) {
   Write-Host '[OK] OCR stack ready (Tesseract + QPDF + chi_sim). / OCR 준비됨.' -ForegroundColor Green
 }
 
-$dest = Join-Path $HOME 'palimpsest-cn'
-$zip = Join-Path $env:TEMP 'palimpsest-cn.zip'
-$tmpDir = Join-Path $env:TEMP 'palimpsest-cn-main'
+$dest = Join-Path $HOME 'HanBridge'
+$zip = Join-Path $env:TEMP 'HanBridge.zip'
+$tmpDir = Join-Path $env:TEMP 'HanBridge-main'
 Write-Host 'Downloading HanBridge... / HanBridge 다운로드 중...' -ForegroundColor Yellow
 Invoke-RestMethod -Uri 'https://codeload.github.com/0124212/HanBridge/zip/refs/heads/main' -OutFile $zip
 Write-Host 'Extracting... / 압축 해제 중...' -ForegroundColor Yellow

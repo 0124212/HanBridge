@@ -5,7 +5,7 @@ All notable changes to this project are documented here. Format follows
 does not yet promise strict [Semantic Versioning](https://semver.org/)
 compatibility guarantees (pre-1.0).
 
-## [Unreleased] — palimpsest-cn fork
+## [Unreleased] — HanBridge fork
 
 ### Fixed
 
