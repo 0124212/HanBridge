@@ -3,32 +3,16 @@
   HanBridge
 </h1>
 
-> **Dad — start here.**
-> This fork translates **Chinese PDF / Word / PowerPoint → Korean or English**
-> with layout preserved, using your WorkBuddy tokens (no VPN needed).
-> 3 steps (Windows 11):
-> 1. Win+X → Terminal, paste + Enter:
-> `powershell -c "irm https://raw.githubusercontent.com/0124212/HanBridge/main/windows/install.ps1 | iex"`
-> 2. Wait until done (HanBridge on the desktop)
-> 3. Drag a Chinese PDF / PPT onto desktop HanBridge → translation appears in `translated`
-> Manual fallback: download zip, unzip, double-click `windows\setup-dad.bat`, then step 3.
-> SmartScreen blocked the zip? Right-click it → Properties → check Unblock (or `Unblock-File -Recurse .` in PowerShell). No admin needed — user-local only (HKCU + %LOCALAPPDATA%, never HKLM). / SmartScreen 경고 시 zip 우클릭 → 속성 → 차단 해제 (또는 PowerShell `Unblock-File -Recurse .`). 관리자 불필요 — 현재 사용자 영역만 사용 (HKCU + %LOCALAPPDATA%, HKLM 기록 없음).
+> **아빠 — 여기서 시작하세요.**
+>
+> <p><a href="https://github.com/0124212/HanBridge/releases/download/v0.4.0-dad-stable/HanBridge-dad.zip"><img alt="HanBridge 다운로드" src="https://img.shields.io/badge/%EB%8B%A4%EC%9A%B4%EB%A1%9C%EB%93%9C-HanBridge--dad.zip-brightgreen?style=for-the-badge"></a></p>
+>
+> 1. 위 **다운로드** 버튼 → 압축 풀기 (우클릭 → 차단 해제 체크)
+> 2. `windows\setup-dad.bat` 더블클릭
+> 3. 중국어 PDF를 HanBridge에 드래그 → 번역본이 `translated` 폴더에 저장
+>
 > Full guides: 🇬🇧 English: **[README.en.md](README.en.md)** · 🇰🇷 한국어: **[README.ko.md](README.ko.md)** · 🇨🇳 中文: **[README.cn.md](README.cn.md)**
 >
-> GPU note (OPTIONAL): setup auto-detects your NVIDIA card via nvidia-smi — any 12GB+ card (e.g. this PC's RTX 3060 12GB) runs local 7b models for fast offline translation via Ollama. Skip if not needed.
-> ```bat
-> ollama pull qwen2.5:7b
-> setx OLLAMA_MODEL "qwen2.5:7b"
-> REM then translate with --backend ollama for offline private translation
-> ```
-> API key in 1 minute (only for WorkBuddy translation; free translatepy needs none):
-> Tencent Cloud console → API Key Management gives 3 values; copy-paste these 3 lines (replace line 2 with your key):
-> ```bat
-> setx WORKBUDDY_API_BASE "https://tokenhub-intl.tencentcloudmaas.com/v1"
-> setx WORKBUDDY_API_KEY "paste-key-here"
-> setx WORKBUDDY_MODEL "deepseek-v4-pro"
-> ```
-> Keys live in env vars only — never inside palimpsest.toml.
 > Details below are the upstream developer docs.
 
 <p align="center">
