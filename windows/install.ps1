@@ -1,6 +1,6 @@
-# install.ps1 -- One-liner installer for Dad's translator (palimpsest-cn)
+# install.ps1 -- One-liner installer for Dad's translator (HanBridge)
 # Run this ONE line in PowerShell (Win+X -> Terminal): / 아래 한 줄을 PowerShell에 붙여넣기 (Win+X → 터미널):
-#   powershell -c "irm https://raw.githubusercontent.com/0124212/palimpsest-cn/main/windows/install.ps1 | iex"
+#   powershell -c "irm https://raw.githubusercontent.com/0124212/HanBridge/main/windows/install.ps1 | iex"
 # Bare run = zero prompts: language from OS locale, free backend, Ollama only if
 # installed + model present. Params: -Lang ko|en -Backend free|ollama|workbuddy -Yes -Interactive.
 param(
@@ -9,18 +9,18 @@ param(
   [switch]$Yes,
   [switch]$Interactive
 )
-# What it does: resolve picks -> download cn/main zip -> $HOME\palimpsest-cn -> run setup-dad.bat.
+# What it does: resolve picks -> download main zip -> $HOME\HanBridge -> run setup-dad.bat.
 # Self-relaunch with Bypass for this process only (user-local, no system change):
 if ((Get-ExecutionPolicy -Scope Process) -notin @('Bypass', 'Unrestricted')) {
   Write-Host 'Policy blocked, relaunching with -ExecutionPolicy Bypass -Scope Process... / 정책 차단, Bypass로 다시 실행 중...' -ForegroundColor Yellow
-  Start-Process powershell -ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-Command',"irm https://raw.githubusercontent.com/0124212/palimpsest-cn/main/windows/install.ps1 | iex" -Wait
+  Start-Process powershell -ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-Command',"irm https://raw.githubusercontent.com/0124212/HanBridge/main/windows/install.ps1 | iex" -Wait
   return
 }
 $ErrorActionPreference = 'Stop'
 
 # Boxed header (cyan) - progress display, no decisions here.
 Write-Host '+--------------------------------------------------+' -ForegroundColor Cyan
-Write-Host '|  Dad Translator Setup / 아빠 번역기 설치' -ForegroundColor Cyan
+Write-Host '|  HanBridge Setup / HanBridge 설치' -ForegroundColor Cyan
 Write-Host '|  Zero prompts by default / 기본값은 질문 없음' -ForegroundColor Cyan
 Write-Host '+--------------------------------------------------+' -ForegroundColor Cyan
 Write-Host ''
@@ -121,7 +121,7 @@ if ($backend -eq '3') {
     if ($Yes) {
       Write-Host '[ERROR] WorkBuddy picked but no key and -Yes given - free default. / 키 없고 -Yes - 무료 기본값.' -ForegroundColor Red
       $backend = '1'
-    } else {
+    } elseif ($Interactive) {
       Write-Host 'WorkBuddy needs 3 values from Tencent Cloud console. / 콘솔에서 3개 값 확인.' -ForegroundColor Yellow
       $wbBase = Read-Host 'API Base (Enter=default)'
       if ([string]::IsNullOrWhiteSpace($wbBase)) { $wbBase = 'https://tokenhub-intl.tencentcloudmaas.com/v1' }
@@ -140,6 +140,9 @@ if ($backend -eq '3') {
         setx.exe WORKBUDDY_MODEL $wbModel | Out-Null
         Write-Host '[OK] WorkBuddy keys saved for this user. / WorkBuddy 키 저장됨.' -ForegroundColor Green
       }
+    } else {
+      Write-Host '[...] WorkBuddy picked but no key - free default, no questions asked. / 키 없음 - 질문 없이 무료 방식으로 진행.' -ForegroundColor Yellow
+      $backend = '1'
     }
   }
 }
@@ -150,11 +153,40 @@ if ($backend -eq '2') { $backendWord = 'ollama' }
 if ($backend -eq '3') { $backendWord = 'workbuddy' }
 $langWord = if ($lang -eq 'KO') { 'ko' } else { 'en' }
 
-$dest = Join-Path $HOME 'palimpsest-cn'
-$zip = Join-Path $env:TEMP 'palimpsest-cn.zip'
-$tmpDir = Join-Path $env:TEMP 'palimpsest-cn-main'
-Write-Host 'Downloading palimpsest-cn... / palimpsest-cn 다운로드 중...' -ForegroundColor Yellow
-Invoke-RestMethod -Uri 'https://codeload.github.com/0124212/palimpsest-cn/zip/refs/heads/main' -OutFile $zip
+# OCR stack for scanned/image PDFs: Tesseract 5.4 + QPDF + chi_sim tessdata.
+# User-local only (winget defaults, APPDATA, setx), never admin. Digital
+# PDFs never need this, so every failure warns and continues.
+$tess = (Get-Command tesseract -ErrorAction SilentlyContinue)
+$qpdfBin = (Get-Command qpdf -ErrorAction SilentlyContinue)
+if (($null -eq $tess) -or ($null -eq $qpdfBin)) {
+  if ($null -ne (Get-Command winget -ErrorAction SilentlyContinue)) {
+    Write-Host 'Installing OCR stack (Tesseract + QPDF)... / OCR 설치 중...' -ForegroundColor Yellow
+    if ($null -eq $tess) { winget install -e --id UB-Mannheim.TesseractOCR --accept-source-agreements --accept-package-agreements }
+    if ($null -eq $qpdfBin) { winget install -e --id QPDF.QPDF --accept-source-agreements --accept-package-agreements }
+  } else {
+    Write-Host '[...] winget missing - OCR skipped. Digital PDFs still work. / winget 없음 - OCR 건너뜀.' -ForegroundColor Yellow
+  }
+}
+$tessDir = Join-Path $env:APPDATA 'palimpsest\tessdata'
+if (-not (Test-Path $tessDir)) { New-Item -ItemType Directory -Path $tessDir -Force | Out-Null }
+$chiSim = Join-Path $tessDir 'chi_sim.traineddata'
+if (-not (Test-Path $chiSim)) {
+  Write-Host 'Downloading chi_sim traineddata, one time... / chi_sim 다운로드 중...' -ForegroundColor Yellow
+  try { Invoke-WebRequest -Uri 'https://github.com/tesseract-ocr/tessdata_fast/raw/main/chi_sim.traineddata' -OutFile $chiSim } catch {
+    Write-Host '[...] chi_sim download failed - digital PDFs still work. / 다운로드 실패.' -ForegroundColor Yellow
+  }
+}
+if (Test-Path $chiSim) {
+  $env:TESSDATA_PREFIX = $tessDir
+  setx.exe TESSDATA_PREFIX $tessDir | Out-Null
+  Write-Host '[OK] OCR stack ready (Tesseract + QPDF + chi_sim). / OCR 준비됨.' -ForegroundColor Green
+}
+
+$dest = Join-Path $HOME 'HanBridge'
+$zip = Join-Path $env:TEMP 'HanBridge.zip'
+$tmpDir = Join-Path $env:TEMP 'HanBridge-main'
+Write-Host 'Downloading HanBridge... / HanBridge 다운로드 중...' -ForegroundColor Yellow
+Invoke-RestMethod -Uri 'https://codeload.github.com/0124212/HanBridge/zip/refs/heads/main' -OutFile $zip
 Write-Host 'Extracting... / 압축 해제 중...' -ForegroundColor Yellow
 if (Test-Path $dest) { Remove-Item -Recurse -Force $dest }
 if (Test-Path $tmpDir) { Remove-Item -Recurse -Force $tmpDir }

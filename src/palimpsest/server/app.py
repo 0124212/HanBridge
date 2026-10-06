@@ -203,7 +203,7 @@ def create_app(
     production callers never pass it."""
     from palimpsest.server.routes import router
 
-    app = FastAPI(title="palimpsest", docs_url="/api/docs", openapi_url="/api/openapi.json")
+    app = FastAPI(title="HanBridge", docs_url="/api/docs", openapi_url="/api/openapi.json")
     app.state.palimpsest = _load_state(config, backend_factory)
 
     app.add_middleware(OriginCheckMiddleware, allowed_origins=extra_origins)

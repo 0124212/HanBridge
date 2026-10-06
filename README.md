@@ -1,6 +1,6 @@
 <h1 align="center">
   <a href="https://ianperaltahirujo.github.io/palimpsest/"><img src="docs/assets/logo.png" width="48" height="48" valign="middle" alt="palimpsest logo — two overlapping page outlines in register"></a>
-  palimpsest-cn
+  HanBridge
 </h1>
 
 > **Dad — start here.**
@@ -8,9 +8,9 @@
 > with layout preserved, using your WorkBuddy tokens (no VPN needed).
 > 3 steps (Windows 11):
 > 1. Win+X → Terminal, paste + Enter:
-> `powershell -c "irm https://raw.githubusercontent.com/0124212/palimpsest-cn/main/windows/install.ps1 | iex"`
-> 2. Wait until done (Chinese Translator on the desktop)
-> 3. Drag a Chinese PDF / PPT onto desktop Chinese Translator → translation appears in `translated`
+> `powershell -c "irm https://raw.githubusercontent.com/0124212/HanBridge/main/windows/install.ps1 | iex"`
+> 2. Wait until done (HanBridge on the desktop)
+> 3. Drag a Chinese PDF / PPT onto desktop HanBridge → translation appears in `translated`
 > Manual fallback: download zip, unzip, double-click `windows\setup-dad.bat`, then step 3.
 > SmartScreen blocked the zip? Right-click it → Properties → check Unblock (or `Unblock-File -Recurse .` in PowerShell). No admin needed — user-local only (HKCU + %LOCALAPPDATA%, never HKLM). / SmartScreen 경고 시 zip 우클릭 → 속성 → 차단 해제 (또는 PowerShell `Unblock-File -Recurse .`). 관리자 불필요 — 현재 사용자 영역만 사용 (HKCU + %LOCALAPPDATA%, HKLM 기록 없음).
 > Full guides: 🇬🇧 English: **[README.en.md](README.en.md)** · 🇰🇷 한국어: **[README.ko.md](README.ko.md)** · 🇨🇳 中文: **[README.cn.md](README.cn.md)**

@@ -37,6 +37,10 @@ NS_MAIN = "http://schemas.openxmlformats.org/spreadsheetml/2006/main"
 NS_A = "http://schemas.openxmlformats.org/drawingml/2006/main"
 NS_W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 
+# Mirror pdf/render.py MIN_SCALE: below ~72% shrinking disfigures more than
+# a slight overflow, so proportional font shrink floors there.
+MIN_SCALE = 0.72
+
 # Text that is never prose and must not be sent to a translator.
 _SKIP_RE = re.compile(r"^[\s\d.,:;%$/()\-+*=<>#&@'\"\[\]{}|\\^~`!?]*$")
 _FORMULA_RE = re.compile(r"^[=+\-@]")
@@ -131,11 +135,66 @@ def sheet_names(path: str) -> list[str]:
     return names
 
 
+def _ensure_shrink_autofit(t_el) -> None:
+    """Pin a pptx/drawing textbox to shrink-to-fit: the a:t's txBody gets a
+    bodyPr holding <a:shrinkTxOnOverflow/>, competing modes removed. Box
+    geometry (xfrm/spPr) is never touched, so layout doesn't reflow -- the
+    renderer shrinks overflowing CJK-expanded text inside the fixed box."""
+    for anc in t_el.iterancestors():
+        if etree.QName(anc).localname != "txBody":
+            continue
+        body_pr = anc.find("{%s}bodyPr" % NS_A)
+        if body_pr is None:
+            body_pr = etree.Element("{%s}bodyPr" % NS_A)
+            anc.insert(0, body_pr)  # bodyPr is always txBody's first child
+        else:
+            for child in list(body_pr):
+                if etree.QName(child).localname in ("noAutofit", "spAutoFit"):
+                    body_pr.remove(child)
+        if body_pr.find("{%s}shrinkTxOnOverflow" % NS_A) is None:
+            etree.SubElement(body_pr, "{%s}shrinkTxOnOverflow" % NS_A)
+        return
+
+
+def _shrink_docx_run(t_el, src: str, dst: str) -> None:
+    """Proportionally shrink a docx run's w:sz/w:szCs when the translation
+    is longer than the source (zh compact -> longer ko/en), floored at
+    MIN_SCALE. Only shrinks explicitly-sized runs; unsized runs (styled by
+    the stylesheet) are left alone. Never grows text."""
+    if len(dst) <= len(src):
+        return
+    scale = max(MIN_SCALE, len(src) / len(dst))
+    if scale >= 1.0:
+        return
+    r = t_el.getparent()
+    while r is not None and etree.QName(r).localname != "r":
+        r = r.getparent()
+    if r is None:
+        return
+    rPr = r.find("{%s}rPr" % NS_W)
+    if rPr is None:
+        return
+    for tag in ("sz", "szCs"):
+        sz_el = rPr.find("{%s}%s" % (NS_W, tag))
+        if sz_el is None:
+            continue
+        try:
+            old = int(sz_el.get("{%s}val" % NS_W))
+        except (TypeError, ValueError):
+            continue
+        sz_el.set("{%s}val" % NS_W, str(max(1, round(old * scale))))
+
+
 def _rewrite_part(
     data: bytes, name: str, lookup: Callable[[str], str | None], stats: dict
 ) -> bytes | None:
     tree = etree.fromstring(data).getroottree()
     changed = False
+    lname = name.lower()
+    is_shape_text = (
+        lname.startswith("ppt/") or "/drawings/" in lname or "/charts/" in lname
+    )
+    is_word = lname.startswith("word/")
     for el in _iter_text_nodes(tree, name):
         s = el.text
         if not _translatable(s):
@@ -145,6 +204,23 @@ def _rewrite_part(
             el.text = en
             changed = True
             stats["nodes"] += 1
+            if is_shape_text:
+                _ensure_shrink_autofit(el)
+            elif is_word:
+                _shrink_docx_run(el, s, en)
+    # Shape/picture alt-text (p:cNvPr, xdr:cNvPr, wp:docPr @descr) is the
+    # figure text screen readers and search see -- translate it too
+    # (no shrink: alt-text has no visible box to overflow).
+    if is_shape_text or is_word:
+        for el in tree.iter():
+            d = el.get("descr")
+            if not _translatable(d):
+                continue
+            en = lookup(d)
+            if en and en != d:
+                el.set("descr", en)
+                changed = True
+                stats["nodes"] += 1
     if not changed:
         return None
     return etree.tostring(tree, xml_declaration=True, encoding="UTF-8", standalone=True)

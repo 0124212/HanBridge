@@ -87,7 +87,7 @@ exit /b 1
 echo.
 echo [DONE] Translation complete, results in translated folder. / [완료] 번역 완료, translated 폴더에서 확인하세요.
 echo %DATE% %TIME% 成功 SUCCESS code=0 "%INPUT%" >> "translated\翻译日志.txt" 2>nul || ver>nul
-start "" explorer "translated"
+for %%F in ("%INPUT%") do start "" explorer "%%~dpFtranslated"
 pause
 exit /b 0
 

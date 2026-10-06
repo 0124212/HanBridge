@@ -1,4 +1,4 @@
-# palimpsest-cn — Quick Guide (English)
+# HanBridge — Quick Guide (English)
 
 Translate Chinese documents (PDF / Word / PowerPoint / Excel) into **Korean or English**
 with the **original layout preserved** — same fonts, positions, tables, and images.
@@ -18,8 +18,8 @@ Only the words change language.
 **Windows (PowerShell):**
 
 ```powershell
-git clone https://github.com/0124212/palimpsest-cn.git
-cd palimpsest-cn
+git clone https://github.com/0124212/HanBridge.git
+cd HanBridge
 py -3.11 -m venv .venv
 .venv\Scripts\activate
 pip install -e ".[all]"
@@ -28,8 +28,8 @@ pip install -e ".[all]"
 **macOS / Linux:**
 
 ```bash
-git clone https://github.com/0124212/palimpsest-cn.git
-cd palimpsest-cn
+git clone https://github.com/0124212/HanBridge.git
+cd HanBridge
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -e ".[all]"

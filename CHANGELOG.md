@@ -5,9 +5,24 @@ All notable changes to this project are documented here. Format follows
 does not yet promise strict [Semantic Versioning](https://semver.org/)
 compatibility guarantees (pre-1.0).
 
-## [Unreleased] — palimpsest-cn fork
+## [Unreleased] — HanBridge fork
 
 ### Fixed
+
+- PDF zh→ko output rendered as tofu boxes: the renderer resolved fonts
+  by SOURCE family (e.g. SimSun/STSong), which has no Hangul glyphs —
+  and no single system face covers Han + Hangul at once (probed:
+  SimSun/SimHei/Noto SC lack Hangul; Malgun/Noto KR lack Han).
+  `FontResolver.resolve()/alias_for()/font_object()` take the actual
+  string (`text=`) and fall over to the first face covering it
+  (`fontmap._COVER_ORDER`), with measurement using the same face.
+  Verified: `einvoice-test.pdf` → Korean extracts correctly, 53/53.
+- `[ocr].language` default was upstream `"spa"` — Chinese scans OCR'd
+  as Spanish. Now `"chi_sim"`. Tesseract itself was also missing on
+  this machine: installed via winget + user-local `chi_sim`
+  traineddata (`%APPDATA%\palimpsest\tessdata`, `TESSDATA_PREFIX`).
+  Verified end-to-end on a rasterized image-only copy of the invoice:
+  `kind=scan` → OCR → 31/31 translated, 0 failed.
 
 - Pure-Chinese paragraphs (no Latin letters at all — e.g. titles like
   实验报告总结) were silently left untranslated in PDF (`pdf/layout.py`)

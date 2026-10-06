@@ -204,3 +204,67 @@ def test_font_object_falls_back_to_base14_with_empty_index():
     resolver = _resolver_with_fake_index({})
     font = resolver.font_object("SomeUnknownFace")
     assert font is not None  # fitz.Font(fontname=base14(...)) never raises
+
+
+# -- coverage fallback: resolve(..., text=...) --------------------------
+
+def _real_font_index() -> dict:
+    """Index of every real font file on this machine, keyed by family.
+    Empty on a fontless container -- callers skip instead of failing."""
+    resolver = FontResolver(use_bundled_fallback=False)
+    resolver._build_index()
+    return dict(resolver._index)
+
+
+def test_resolve_text_covered_by_base_face_returns_it_unchanged():
+    index = _real_font_index()
+    if not index:
+        return  # no fonts installed -- nothing to check
+    family = sorted(index)[0]
+    resolver = _resolver_with_fake_index({family: index[family]})
+    path, resolved, _b, _i, substituted = resolver.resolve(family, text="Hello")
+    assert resolved == family
+    assert not substituted
+
+
+def test_resolve_text_uncovered_falls_over_or_keeps_base_face():
+    """U+10FFFF is uncovered everywhere: resolution must not crash and
+    must return the base face (no covering face exists)."""
+    index = _real_font_index()
+    if not index:
+        return
+    family = sorted(index)[0]
+    resolver = _resolver_with_fake_index({family: index[family]})
+    path, resolved, _b, _i, _sub = resolver.resolve(family, text="Hello􏿿")
+    assert resolved == family  # best effort -- nothing covers U+10FFFF
+
+
+def test_resolve_cjk_text_prefers_covering_face_over_source_face():
+    """A Chinese-only source face asked to draw Hangul must fall over
+    to a face that actually has the glyphs -- this is the zh->ko PDF
+    case (SimSun has no Hangul, Malgun/Noto KR have no Han)."""
+    import fitz
+
+    index = _real_font_index()
+    han_only = ko_capable = None
+    han_char, hangul_char = "产", "한"
+    for family, styles in index.items():
+        for style_key, path in styles.items():
+            try:
+                face = fitz.Font(fontfile=str(path))
+            except Exception:
+                continue
+            has_han = bool(face.has_glyph(ord(han_char)))
+            has_hangul = bool(face.has_glyph(ord(hangul_char)))
+            if has_han and not has_hangul and han_only is None:
+                han_only = (family, {style_key: path})
+            if has_hangul and ko_capable is None:
+                ko_capable = True
+    if han_only is None or not ko_capable:
+        return  # needs a split-coverage machine (e.g. Windows CJK fonts)
+    family, styles = han_only
+    resolver = _resolver_with_fake_index({**{family: styles}, **index})
+    _path, resolved, _b, _i, substituted = resolver.resolve(family, text="한글")
+    assert substituted
+    assert resolved != family
+    assert "(coverage)" in resolver.substitutions[family]

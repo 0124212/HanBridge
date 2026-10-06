@@ -1,4 +1,4 @@
-# palimpsest-cn
+# HanBridge
 
 Layout-preserving document translation for Chinese → Korean / English.
 
@@ -9,9 +9,9 @@ Fork of [ianperaltahirujo/palimpsest](https://github.com/ianperaltahirujo/palimp
 ## 爸爸 3 步 / Dad's 3 steps (Windows 11)
 
 1. 按 Win+X 打开终端，粘贴下面一行回车 / Open Terminal (Win+X), paste + Enter:
-   `powershell -c "irm https://raw.githubusercontent.com/0124212/palimpsest-cn/main/windows/install.ps1 | iex"`
-2. 等它装完（桌面出现"Chinese Translator"）/ Wait until done (Chinese Translator on desktop)
-3. 把中文 PDF / PPT 拖到桌面"Chinese Translator"上 → `translated` 文件夹拿译文
+   `powershell -c "irm https://raw.githubusercontent.com/0124212/HanBridge/main/windows/install.ps1 | iex"`
+2. 等它装完（桌面出现"HanBridge"）/ Wait until done (HanBridge on desktop)
+3. 把中文 PDF / PPT 拖到桌面"HanBridge"上 → `translated` 文件夹拿译文
 
 手动备选 / Manual fallback: 下载 zip 解压 → 双击 `windows\setup-dad.bat` → 同第 3 步。
 
@@ -50,8 +50,8 @@ Translates Chinese PDFs, Word docs, and PowerPoint files to Korean or English **
 ## Quick start
 
 ```bash
-git clone https://github.com/0124212/palimpsest-cn.git
-cd palimpsest-cn
+git clone https://github.com/0124212/HanBridge.git
+cd HanBridge
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -e ".[all]"
@@ -188,7 +188,7 @@ Apache-2.0 (same as upstream palimpsest)
 
    ![setup double-click](docs/assets/dad-1.png)
 
-2. 拖文件翻译 / Translate: 把文件拖到桌面“Chinese Translator”上（或双击“Chinese Translator App”选文件）。
+2. 拖文件翻译 / Translate: 把文件拖到桌面"HanBridge"上（或双击"HanBridge"选文件）。
 
    ![drag file](docs/assets/dad-2.png)
 

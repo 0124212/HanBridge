@@ -1,4 +1,4 @@
-"""DadTranslate.py -- Dad's windowed translator (tkinter only, no new deps).
+"""HanBridge.py -- Dad's windowed translator (tkinter only, no new deps).
 
 Single window: big file-picker button, Chinese->Korean label,
 drag-drop hint, progress label, done = green status + open-folder button.
@@ -10,7 +10,7 @@ import os
 import subprocess
 import sys
 import tkinter as tk
-from tkinter import filedialog
+from tkinter import filedialog, messagebox
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent  # repo root
@@ -21,7 +21,7 @@ LANG_FILE = Path(__file__).resolve().parent / "lang.json"
 
 STRINGS = {
     "ko": {
-        "title": "Chinese Translator App (중국어 번역기)",
+        "title": "HanBridge (중국어 번역기)",
         "direction": "중국어 → 한국어",
         "pick": "파일 선택",
         "open_folder": "폴더 열기",
@@ -32,13 +32,15 @@ STRINGS = {
         "working_big": "큰 파일입니다. 잠시만 기다리세요...",
         "done": "완료!",
         "failed": "실패, 다시 시도하세요.",
+        "done_popup": "완료! 바탕화면 translated 폴더를 보세요.",
+        "fail_popup": "실패했습니다. 원본은 그대로 있습니다. 다시 시도하세요.",
         "dialog_title": "번역할 파일 선택",
         "log_start": "Translating: ",
         "log_fail": "[FAILED] ",
         "log_done": "[DONE] ",
     },
     "en": {
-        "title": "Chinese Translator App",
+        "title": "HanBridge",
         "direction": "Chinese → Korean",
         "pick": "Choose file",
         "open_folder": "Open folder",
@@ -49,6 +51,8 @@ STRINGS = {
         "working_big": "Big file, please wait...",
         "done": "Done!",
         "failed": "Failed, please retry.",
+        "done_popup": "Done! Check the translated folder on your Desktop.",
+        "fail_popup": "Failed. Your original file is untouched. Please try again.",
         "dialog_title": "Choose file to translate",
         "log_start": "Translating: ",
         "log_fail": "[FAILED] ",
@@ -128,13 +132,22 @@ def main():
         except subprocess.CalledProcessError:
             set_state("failed")
             append_log(t("log_fail") + path)
+            messagebox.showerror(t("title"), t("fail_popup"))
             return
         set_state("done")
         append_log(t("log_done") + path)
+        try:
+            os.startfile(str(OUT_DIR))
+        except OSError:
+            pass
+        messagebox.showinfo(t("title"), t("done_popup"))
         open_btn.pack(pady=6)
 
     def pick_file():
-        path = filedialog.askopenfilename(title=t("dialog_title"))
+        path = filedialog.askopenfilename(
+            title=t("dialog_title"),
+            filetypes=[("문서 Documents", "*.pdf *.docx *.pptx *.xlsx"),
+                       ("모든 파일 All files", "*.*")])
         if path:
             run_translate(path)
 

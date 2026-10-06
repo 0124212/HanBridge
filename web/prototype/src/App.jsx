@@ -80,7 +80,7 @@ function Shell() {
               style={{ display: "flex", alignItems: "center", gap: 9, fontFamily: '"Archivo Expanded", "Arial Narrow", sans-serif', fontWeight: 800, fontStretch: "118%", fontSize: 16.5 }}
             >
               <Logo />
-              palimpsest
+              HanBridge
             </UnstyledButton>
           </Group>
           <Group gap={10}>

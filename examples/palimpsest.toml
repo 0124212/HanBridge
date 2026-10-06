@@ -12,7 +12,7 @@ schema = 1
 
 [language]
 source = "es"
-target = "en"
+target = "ko"
 
 [paths]
 source_dir = "corpus/source"

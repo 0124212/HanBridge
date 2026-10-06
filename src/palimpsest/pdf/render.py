@@ -74,21 +74,23 @@ class RenderContext:
 
     _font_cache: dict = field(default_factory=dict, init=False, repr=False)
 
-    def font_for(self, style: tuple) -> fitz.Font:
+    def font_for(self, style: tuple, text: str = "") -> fitz.Font:
         """Measurement font. Keyed on the full style so the metrics used
         for wrapping are those of the face actually drawn -- measuring in
         regular and drawing in bold would make every bold line overrun
-        its box."""
+        its box. `text` selects the same coverage fallback the page
+        render uses, so measurement and drawing never disagree."""
         fontname, _size, bold, ital, _color, _underline, _highlight = style
-        key = (fontname, bold, ital, self.default_scan_family)
+        key = (fontname, bold, ital, self.default_scan_family, text)
         if key not in self._font_cache:
             self._font_cache[key] = self.font_resolver.font_object(
-                fontname, bold=bold, italic=ital, default_family=self.default_scan_family
+                fontname, bold=bold, italic=ital,
+                default_family=self.default_scan_family, text=text,
             )
         return self._font_cache[key]
 
     def measure(self, word: str, style: tuple, size: float) -> float:
-        return self.font_for(style).text_length(word, fontsize=size)
+        return self.font_for(style, word).text_length(word, fontsize=size)
 
 
 def _tokenise(segments) -> list[tuple[str, tuple]]:
@@ -196,7 +198,7 @@ def draw_paragraph(
     if marker is not None:
         alias = ctx.font_resolver.alias_for(
             page, marker_style[0], bold=marker_style[2], italic=marker_style[3],
-            default_family=ctx.default_scan_family,
+            default_family=ctx.default_scan_family, text=marker,
         )
         try:
             page.insert_text(
@@ -248,7 +250,7 @@ def draw_paragraph(
                 page.draw_rect(hi_rect, color=None, fill=highlight, width=0, overlay=True)
             alias = ctx.font_resolver.alias_for(
                 page, style[0], bold=style[2], italic=style[3],
-                default_family=ctx.default_scan_family,
+                default_family=ctx.default_scan_family, text=word,
             )
             try:
                 page.insert_text(
