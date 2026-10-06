@@ -1,6 +1,6 @@
 # HanBridge Portable — 3 steps
 
-No install. No admin rights needed.
+No install. No elevation needed.
 
 ## How to use
 

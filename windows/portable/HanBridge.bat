@@ -1,12 +1,14 @@
 @echo off
 REM HanBridge.bat -- portable dad-proof launcher, zero install.
-REM Unzip anywhere, double-click (opens the window app) or drag a PDF onto
+REM Unzip anywhere, double-click (opens the window app) or drag a PDF/PPTX onto
 REM this file (translates it straight to Korean + bilingual PDF).
-REM No admin, no setx, no winget, no network setup -- everything resolves
-REM inside this folder. translatepy backend needs internet; nothing else does.
+REM No elevation, no registry writes, no installers, no network setup --
+REM everything resolves inside this folder. translatepy needs internet; nothing else does.
 
 chcp 65001 >nul
 set "ROOT=%~dp0"
+echo HanBridge portable -- version:
+if exist "%ROOT%app\windows\VERSION" type "%ROOT%app\windows\VERSION"
 
 REM MAX_PATH preflight: deep extract paths break embedded python past ~100 chars.
 powershell -NoProfile -Command "if ($env:ROOT.Length -gt 100) { exit 1 } else { exit 0 }" >nul 2>&1
@@ -14,6 +16,7 @@ if not errorlevel 1 goto :pathok
 goto :longpath
 
 :pathok
+call :selfupdate
 REM Portable environment, session-local only -- nothing leaks to the system.
 set "TESSDATA_PREFIX=%ROOT%tessdata"
 set "PYTHONPATH=%ROOT%app"
@@ -37,6 +40,7 @@ if errorlevel 1 goto :failed
 echo.
 echo 완료! 원본 옆 translated 폴더를 보세요.
 for %%F in ("%~1") do start "" explorer "%%~dpFtranslated"
+powershell -NoProfile -Command "(New-Object -ComObject WScript.Shell).Popup('완료! 원본 옆 translated 폴더를 보세요.',0,'HanBridge',64)" >nul 2>&1
 echo 계속하려면 아무 키나 누르세요...
 pause >nul
 goto :done
@@ -56,3 +60,32 @@ pause
 goto :done
 
 :done
+goto :eof
+
+REM Self-update: re-unzipping overwrites app files but translated/ is kept
+REM (backup copy translated_backup_YYYYMMDD, never delete). Standalone
+REM installs' translated/ is merged in on first run. Zero prompts.
+REM Batch-safe: single-line ifs plus goto/call only, no inline blocks.
+:selfupdate
+set "BKDATE="
+for /f %%D in ('powershell -NoProfile -Command "Get-Date -Format yyyyMMdd" 2^>nul') do set "BKDATE=%%D"
+if "%BKDATE%"=="" set "BKDATE=backup"
+set "FOUNDUPDATE="
+if not exist "%ROOT%app\translated" goto :mergeall
+if not exist "%ROOT%app\translated_backup_%BKDATE%" mkdir "%ROOT%app\translated_backup_%BKDATE%" >nul 2>&1
+xcopy "%ROOT%app\translated\*" "%ROOT%app\translated_backup_%BKDATE%\" /E /I /Y >nul 2>&1
+set "FOUNDUPDATE=1"
+:mergeall
+for %%L in ("%USERPROFILE%\HanBridge\translated" "C:\HanBridge\translated" "%USERPROFILE%\palimpsest-cn\translated" "C:\palimpsest-cn\translated") do call :mergetr "%%~L"
+if defined FOUNDUPDATE echo 이전 버전을 새 버전으로 업데이트했어요
+exit /b 0
+
+:mergetr
+set "SRC=%~1"
+if "%SRC%"=="" exit /b 0
+if /i "%SRC%"=="%ROOT%app\translated" exit /b 0
+if not exist "%SRC%" exit /b 0
+if not exist "%ROOT%app\translated" mkdir "%ROOT%app\translated" >nul 2>&1
+xcopy "%SRC%\*" "%ROOT%app\translated\" /E /I /Y >nul 2>&1
+set "FOUNDUPDATE=1"
+exit /b 0

@@ -1,6 +1,7 @@
-# Build-Portable.ps1 -- assemble the portable folder Build-Portable runs in.
-# Run ONCE on any Windows PC with internet (yours or Dad's, admin NOT needed):
-#   powershell -ExecutionPolicy Bypass -File Build-Portable.ps1 [-DryRun] [-OutDir .\HanBridge-Portable]
+# Build-Portable.ps1 -- assemble the portable folder Dad unzips and runs.
+# Run ONCE on any Windows PC with internet (yours or Dad's, elevation NOT needed):
+#   Unblock-File .\Build-Portable.ps1   (once; right-click -> Unblock also works)
+#   .\Build-Portable.ps1 [-DryRun] [-OutDir .\HanBridge-Portable]
 # -DryRun (default ON when -OutDir is omitted): print URLs + layout, download nothing.
 # Real run: .\Build-Portable.ps1 -OutDir C:\hb-portable   (DryRun auto-off with -OutDir)
 # Result is xcopy-able: zip the OutDir, Dad unzips, double-clicks HanBridge.bat.
@@ -22,9 +23,10 @@ if ([string]::IsNullOrWhiteSpace($OutDir)) { $DryRun = $true }
 $PY_VER  = '3.12.7'
 $PY_URL  = "https://www.python.org/ftp/python/$PY_VER/python-$PY_VER-embed-amd64.zip"
 $PIP_URL = 'https://bootstrap.pypa.io/get-pip.py'
-# UB-Mannheim installer, silent-extracted (/S /D=) -- no admin, files copied out, rest deleted.
+# UB-Mannheim installer, builder PC only, silent-extracted (/S /D=) --
+# no elevation, exe + DLLs copied out, rest deleted. Only files ship.
 $TESS_VER = '5.4.0.20240606'
-$TESS_URL = "https://digi.bib.uni-mannheim.de/tesseract/tesseract-ocr-w64-setup-$TESS_VER.exe"
+$TESS_URL = "https://github.com/UB-Mannheim/tesseract/releases/download/v$TESS_VER/tesseract-ocr-w64-setup-$TESS_VER.exe"
 $TESSDATA_BASE = 'https://github.com/tesseract-ocr/tessdata_fast/raw/main'
 $TESSDATA_FILES = @('chi_sim.traineddata', 'chi_tra.traineddata', 'eng.traineddata', 'osd.traineddata')
 $FONTS_BASE = 'https://github.com/googlefonts/noto-cjk/raw/main/Sans/OTF'
@@ -70,6 +72,7 @@ $manifest += "python-embed $PY_URL $((Fetch $PY_URL $pyZip))"
 Expand-Archive -Path $pyZip -DestinationPath $pyDir -Force
 $getPip = Join-Path $tmp 'get-pip.py'
 Invoke-WebRequest -Uri $PIP_URL -OutFile $getPip
+$manifest += "get-pip $PIP_URL $((Get-FileHash $getPip -Algorithm SHA256).Hash)"
 & "$pyDir\python.exe" $getPip
 # Embeddable ignores installed site-packages unless the ._pth enables site:
 # uncomment `import site`, keep zip + dot, add Lib\site-packages so --target lands on sys.path.
@@ -104,7 +107,9 @@ foreach ($f in $FONT_FILES) {
 Step 'app + pip install...'
 $repoRoot = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 Copy-Item (Join-Path $repoRoot 'skills') (Join-Path $appDir 'skills') -Recurse -Force
+if (-not (Test-Path (Join-Path $appDir 'windows'))) { New-Item -ItemType Directory -Path (Join-Path $appDir 'windows') -Force | Out-Null }
 Copy-Item (Join-Path $repoRoot 'windows\HanBridge.py') (Join-Path $appDir 'windows\HanBridge.py') -Force
+Copy-Item (Join-Path $repoRoot 'windows\VERSION') (Join-Path $appDir 'windows\VERSION') -Force -ErrorAction SilentlyContinue
 Copy-Item (Join-Path $repoRoot 'examples\palimpsest.zh-ko.toml') (Join-Path $appDir 'palimpsest.zh-ko.toml') -Force
 Copy-Item (Join-Path $PSScriptRoot 'HanBridge.bat') $OutDir -Force
 Copy-Item (Join-Path $PSScriptRoot 'README-DAD.*.md') $OutDir -Force -ErrorAction SilentlyContinue
